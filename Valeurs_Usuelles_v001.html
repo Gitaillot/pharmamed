@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Valeurs Normales — Physiologie & Biochimie</title>
+<style>
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #1a1210;
+    color: #e8e2dd;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  html { height: -webkit-fill-available; overflow: hidden; }
+
+  .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ── GROUP SELECT ── */
+  .group-select {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 2rem;
+  }
+  .group-select h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: #c4998a;
+    margin-bottom: 0.25rem;
+    flex-shrink: 0;
+  }
+  .group-select .subtitle {
+    font-size: 0.8rem;
+    color: #6b5548;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+  }
+  .mode-toggle.level-toggle {
+    margin-bottom: 1.1rem;
+  }
+  .mode-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #8a7060;
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: rgba(200,120,80,0.12);
+    border-color: rgba(200,120,80,0.3);
+    color: #e0a070;
+  }
+  .mode-btn:active { transform: scale(0.95); }
+
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+    max-width: 420px;
+    width: 100%;
+    padding-bottom: 2rem;
+    flex-shrink: 0;
+  }
+  .group-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 12px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    touch-action: manipulation;
+  }
+  .group-btn:active { transform: scale(0.93); }
+  .group-btn .gicon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+  .group-btn .gname { font-size: 0.78rem; font-weight: 600; color: #c4998a; display: block; line-height: 1.3; }
+  .group-btn .gcount { font-size: 0.62rem; color: #5a4a40; display: block; margin-top: 3px; }
+  .group-btn.completed { border-color: #4e6e4a; background: rgba(60,100,55,0.1); }
+  .group-btn.completed .gname { color: #7aba6a; }
+  .group-btn.in-progress { border-color: #6e5a30; background: rgba(100,80,40,0.1); }
+  .group-btn.in-progress .gname { color: #d4b85a; }
+  .group-btn.empty-level { opacity: 0.35; cursor: not-allowed; }
+  .group-btn.empty-level:active { transform: none; }
+
+  /* ── CARD SCREEN ── */
+  .card-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 460px;
+    margin-bottom: 0.6rem;
+  }
+  .back-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #8a7060;
+    font-size: 0.82rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .back-btn:active { opacity: 0.6; }
+  .group-label { font-size: 0.8rem; color: #5a4a40; }
+  .progress-track {
+    width: 100%;
+    max-width: 460px;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8a5a3a, #c48050);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0;
+  }
+
+  /* ── THE CARD ── */
+  .card {
+    width: 100%;
+    max-width: 460px;
+    min-height: 300px;
+    background: linear-gradient(155deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.8rem 1.5rem;
+    margin-bottom: 1.1rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -20%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(ellipse at 25% 25%, rgba(200,100,60,0.05), transparent 55%);
+    pointer-events: none;
+  }
+  .param-cat {
+    font-size: 0.68rem;
+    color: #6b5548;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .param-name {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+  }
+  .param-aka {
+    font-size: 0.82rem;
+    color: #7a6050;
+    margin-bottom: 0.8rem;
+    text-align: center;
+  }
+
+  /* Revealed */
+  .param-details {
+    width: 100%;
+    min-height: 8rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .param-hint {
+    color: #5a4a40;
+    font-size: 0.82rem;
+    margin-top: 0.8rem;
+  }
+  .val-main {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #e8a060;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .val-unit {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #a07850;
+  }
+  .val-note {
+    font-size: 0.8rem;
+    color: #7a6a5a;
+    text-align: center;
+    line-height: 1.5;
+    max-width: 90%;
+    margin-top: 0.3rem;
+  }
+  .val-danger {
+    font-size: 0.72rem;
+    color: #c06050;
+    text-align: center;
+    margin-top: 0.4rem;
+    line-height: 1.4;
+    max-width: 90%;
+  }
+  .val-sep {
+    width: 40px;
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 0.3rem 0;
+  }
+
+  /* ── BUTTONS ── */
+  .buttons-zone {
+    height: 3.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+  }
+  .buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    position: absolute;
+  }
+  .buttons.hidden { visibility: hidden; pointer-events: none; }
+  button {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button:active:not(:disabled) { transform: scale(0.95); opacity: 0.85; }
+  button:disabled { cursor: default; opacity: 0.35; }
+  .btn-reveal {
+    background: linear-gradient(135deg, #9a5a3a, #7a4028);
+    color: #f0ddd0;
+    min-width: 200px;
+    box-shadow: 0 4px 20px rgba(120,60,30,0.4);
+  }
+  .btn-known {
+    background: linear-gradient(135deg, #4a8a4a, #3a7a3a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(50,100,50,0.3);
+    padding: 14px 20px;
+  }
+  .btn-review-3 {
+    background: linear-gradient(135deg, #b07030, #c08040);
+    color: white;
+    box-shadow: 0 4px 15px rgba(170,100,40,0.3);
+    padding: 14px 18px;
+    min-width: 64px;
+  }
+  .btn-review-5 {
+    background: linear-gradient(135deg, #8a5530, #a06840);
+    color: #f0e0d0;
+    box-shadow: 0 4px 15px rgba(130,80,40,0.25);
+    padding: 14px 18px;
+    min-width: 64px;
+  }
+  .btn-restart {
+    background: linear-gradient(135deg, #9a5a3a, #7a4028);
+    color: #f0ddd0;
+    min-width: 200px;
+  }
+
+  .stats {
+    font-size: 0.74rem;
+    color: #5a4a40;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .stats strong { color: #8a7060; }
+
+  .done-box { text-align: center; padding: 2rem; }
+  .done-box h2 { font-size: 1.8rem; font-weight: 300; color: #7aba6a; margin-bottom: 1rem; }
+  .done-box p { color: #6b5548; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* ── TABLE SCREEN ── */
+  .table-screen {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 1.5rem;
+  }
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 620px;
+    margin-bottom: 0.8rem;
+    flex-shrink: 0;
+  }
+  .table-header h2 { font-size: 1.05rem; font-weight: 400; color: #c4998a; }
+  .ref-table {
+    width: 100%;
+    max-width: 620px;
+    border-collapse: collapse;
+    flex-shrink: 0;
+    margin-bottom: 2rem;
+  }
+  .ref-table th {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #6b5548;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    text-align: left;
+  }
+  .ref-table td {
+    font-size: 0.8rem;
+    padding: 7px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: #b0a090;
+  }
+  .ref-table td:first-child { color: #e0d0c0; font-weight: 600; }
+  .ref-table td.val-cell { color: #e8a060; font-weight: 600; }
+  .ref-table td.note-cell { color: #7a6a5a; font-size: 0.72rem; }
+  .ref-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── RÉCALCITRANTS ── */
+  .floating-btn {
+    position: fixed; top: 14px;
+    width: 42px; height: 42px; padding: 0;
+    border: none; border-radius: 50%;
+    color: white; font-size: 1.1rem; cursor: pointer;
+    z-index: 200; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation;
+  }
+  .floating-btn:active:not(:disabled) { transform: scale(0.92); opacity: 0.85; }
+  .floating-btn:disabled { opacity: 0.25; cursor: default; }
+  #markBtn { left: 14px; background: linear-gradient(135deg, #7a3a1a, #b06030); }
+  #markBtn.marked { background: linear-gradient(135deg, #4a8a4a, #3a7a3a); color: white; }
+  #listBtn { right: 14px; background: rgba(120,60,20,0.88); }
+  #listBtn .badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #e8a060; color: #1a0a00;
+    font-size: 0.62rem; font-weight: 800; min-width: 18px; height: 18px;
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    padding: 0 4px; border: 2px solid #1a1210;
+  }
+  #listBtn .badge.empty { display: none; }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78); z-index: 300;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #201008; border: 1px solid rgba(196,153,138,0.18); border-radius: 16px;
+    width: 100%; max-width: 460px; max-height: 85vh;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal-header {
+    padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h3 { font-size: 1rem; font-weight: 600; color: #c4998a; margin: 0; }
+  .modal-close { background: transparent; color: #8a7060; font-size: 1.5rem; line-height: 1; padding: 0 8px; font-weight: 300; }
+  .modal-body { padding: 14px 18px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+  #rebelList {
+    width: 100%; min-height: 180px;
+    background: #100804; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px;
+    color: #c8b8a8; font-family: ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    font-size: 0.82rem; padding: 10px 12px; line-height: 1.55; resize: vertical;
+    -webkit-user-select: text !important; user-select: text !important;
+    -webkit-touch-callout: default !important; touch-action: auto;
+  }
+  #rebelList:focus { outline: 1px solid rgba(196,153,138,0.4); }
+  .modal-footer {
+    padding: 12px 18px 14px; border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between;
+  }
+  .modal-footer button { padding: 10px 16px; font-size: 0.82rem; border-radius: 10px; flex: 1; min-width: 90px; }
+  .btn-copy { background: linear-gradient(135deg, #4a8a4a, #3a7a3a); color: white; }
+  .btn-clear { background: rgba(255,255,255,0.05); color: #c08080; border: 1px solid rgba(200,80,80,0.22); }
+
+  @media (max-width: 370px) {
+    .param-name { font-size: 1.6rem; }
+    .groups-grid { grid-template-columns: repeat(2, 1fr); }
+    button { padding: 12px 18px; font-size: 0.88rem; }
+  }
+  @media (max-height: 650px) {
+    .card { min-height: 240px; padding: 1.2rem; }
+    .param-name { font-size: 1.6rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen group-select active" id="screenGroups">
+  <h1>🩺 Valeurs Normales</h1>
+  <div class="subtitle">Physiologie & Biochimie<br>Valeurs de référence chez l'adulte</div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="modeCards" data-mode="cards">Flashcards</div>
+    <div class="mode-btn" id="modeTable" data-mode="table">Tableau</div>
+  </div>
+  <div class="mode-toggle level-toggle">
+    <div class="mode-btn" id="levelBase" data-level="B">Base</div>
+    <div class="mode-btn" id="levelAdv" data-level="A">Avancé</div>
+    <div class="mode-btn active" id="levelAll" data-level="T">Tous</div>
+  </div>
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
+
+<div class="screen card-screen" id="screenCard">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn">← Catégories</button>
+    <span class="group-label" id="groupLabel"></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="theCard">
+    <div class="param-cat" id="paramCat"></div>
+    <div class="param-name" id="paramName">&nbsp;</div>
+    <div class="param-aka" id="paramAka">&nbsp;</div>
+    <div class="param-details" id="paramDetails">
+      <div class="param-hint">Quelle est la valeur normale ?</div>
+    </div>
+  </div>
+
+  <div class="buttons-zone">
+    <div class="buttons" id="revealButtons">
+      <button class="btn-reveal" id="revealBtn">Révéler</button>
+    </div>
+    <div class="buttons hidden" id="actionButtons">
+      <button class="btn-known" id="knownBtn">Connu</button>
+      <button class="btn-review-3" id="review3Btn">+3</button>
+      <button class="btn-review-5" id="review5Btn">+5</button>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+
+  <div class="done-box" id="doneBox" style="display:none">
+    <h2>✓ Catégorie terminée !</h2>
+    <p id="doneSummary"></p>
+    <button class="btn-restart" id="restartBtn">Recommencer</button>
+    <br><button class="back-btn" id="backBtn2" style="margin-top:12px">← Retour</button>
+  </div>
+</div>
+
+<div class="screen table-screen" id="screenTable">
+  <div class="table-header">
+    <button class="back-btn" id="backBtnT">← Retour</button>
+    <h2 id="tableTitle"></h2>
+  </div>
+  <table class="ref-table">
+    <thead><tr><th>Paramètre</th><th>Valeur normale</th><th>Unité</th><th>Notes</th></tr></thead>
+    <tbody id="tBody"></tbody>
+  </table>
+</div>
+
+<button class="floating-btn" id="markBtn" title="Marquer comme récalcitrant" disabled>⚑</button>
+<button class="floating-btn" id="listBtn" title="Voir les récalcitrants">🚩<span class="badge empty" id="rebelBadge">0</span></button>
+
+<div class="modal-overlay" id="rebelModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🚩 Récalcitrants</h3>
+      <button class="modal-close" id="modalCloseBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="rebelList" readonly placeholder="Aucune valeur marquée."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-copy" id="copyBtn">📋 Copier</button>
+      <button class="btn-clear" id="clearBtn">🗑 Vider</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// DATA: [name, alias, value, unit, notes, danger]
+// Grouped by category
+// ═══════════════════════════════════════════════════════════
+// 7e champ : "B" = Base · "A" = Avancé (défaut si absent)
+var CATS = [
+{
+  name: "Hématologie", icon: "🩸", items: [
+    ["Hémoglobine (Hb)","","H: 13–17 · F: 12–16","g/dL","Varie selon le sexe","< 7 g/dL : transfusion souvent envisagée","B"],
+    ["Hématocrite (Ht)","","H: 40–54 % · F: 36–48 %","%","Proportion de GR dans le sang","","B"],
+    ["Globules rouges (GR)","Érythrocytes","H: 4,5–5,5 · F: 4,0–5,0","T/L (10¹²/L)","","","B"],
+    ["VGM","Volume globulaire moyen","80–100","fL","Microcytaire < 80 · Macrocytaire > 100","","A"],
+    ["TCMH","Teneur corpusculaire moyenne en Hb","27–32","pg","","","A"],
+    ["CCMH","Concentration corpusculaire moyenne en Hb","32–36","g/dL","","","A"],
+    ["Réticulocytes","","25 000–100 000","/mm³","↑ = régénération médullaire","","A"],
+    ["Globules blancs (GB)","Leucocytes","4 000–10 000","/mm³","","< 1 500 neutro = neutropénie sévère","B"],
+    ["Neutrophiles","PNN","1 500–7 000","/mm³","45–70 % des GB","","A"],
+    ["Lymphocytes","","1 000–4 000","/mm³","20–40 % des GB","","B"],
+    ["Monocytes","","200–1 000","/mm³","3–8 % des GB","","A"],
+    ["Éosinophiles","","50–500","/mm³","1–4 % des GB · ↑ allergie, parasites","","A"],
+    ["Basophiles","","< 100","/mm³","< 1 % des GB","","A"],
+    ["Plaquettes","Thrombocytes","150 000–400 000","/mm³","","< 50 000 : risque hémorragique","B"],
+    ["VS","Vitesse de sédimentation","H: < 15 · F: < 20","mm/1ʳᵉ heure","↑ inflammation, infection","","A"],
+    ["CRP","Protéine C-réactive","< 5","mg/L","Marqueur d'inflammation aiguë","> 200 : infection sévère","A"],
+    ["TP","Taux de prothrombine","70–100","%","Voie extrinsèque","< 30 % : risque hémorragique majeur","A"],
+    ["INR","International Normalized Ratio","0,8–1,2","","Sous AVK : cible 2–3","> 5 : risque hémorragique","A"],
+    ["TCA","Temps de céphaline activée","30–40","secondes","Ratio TCA patient/témoin < 1,2","","A"],
+    ["Fibrinogène","","2–4","g/L","↑ inflammation · ↓ CIVD","","A"],
+    ["D-dimères","","< 500","µg/L (ng/mL)","↑ si thrombose, CIVD, embolie","","A"],
+  ]
+},
+{
+  name: "Biochimie sanguine", icon: "🧪", items: [
+    ["Glycémie à jeun","","0,70–1,10","g/L (3,9–6,1 mmol/L)","≥ 1,26 g/L à 2 reprises = diabète","< 0,50 : hypoglycémie sévère","B"],
+    ["HbA1c","Hémoglobine glyquée","< 6 %","%","Cible diabétique : < 7 %","> 10 % : déséquilibre majeur","B"],
+    ["Créatinine","","H: 7–13 · F: 6–11","mg/L","Fonction rénale","","B"],
+    ["DFG","Débit de filtration glomérulaire","> 90","mL/min/1,73m²","< 60 = IRC · < 15 = terminale","","A"],
+    ["Urée","","0,15–0,45","g/L (2,5–7,5 mmol/L)","↑ insuffisance rénale, déshydratation","","B"],
+    ["Acide urique","Uricémie","H: 35–70 · F: 25–60","mg/L","↑ goutte","","B"],
+    ["Cholestérol total","","< 2,0","g/L (< 5,2 mmol/L)","Objectif recommandé","","B"],
+    ["HDL-cholestérol","« Bon cholestérol »","H: > 0,40 · F: > 0,50","g/L","Protecteur cardiovasculaire","","B"],
+    ["LDL-cholestérol","« Mauvais cholestérol »","< 1,6","g/L","Cible selon risque CV (< 0,70 si haut risque)","","B"],
+    ["Triglycérides","","< 1,5","g/L (< 1,7 mmol/L)","↑ syndrome métabolique","","B"],
+    ["ASAT (TGO)","Aspartate aminotransférase","< 35","UI/L","Foie, cœur, muscles","","A"],
+    ["ALAT (TGP)","Alanine aminotransférase","< 45","UI/L","Plus spécifique du foie","","A"],
+    ["GGT","Gamma-glutamyl transférase","H: < 55 · F: < 38","UI/L","↑ alcool, cholestase","","B"],
+    ["PAL","Phosphatases alcalines","30–120","UI/L","↑ cholestase, pathologie osseuse","","A"],
+    ["Bilirubine totale","","< 12","mg/L (< 17 µmol/L)","↑ ictère","","A"],
+    ["LDH","Lactate déshydrogénase","120–246","UI/L","Marqueur de lyse cellulaire","","A"],
+    ["CPK","Créatine phosphokinase","H: 30–200 · F: 30–150","UI/L","↑ infarctus, rhabdomyolyse","","A"],
+    ["Troponine I / T","","< 0,04 (selon labo)","ng/mL","Marqueur de nécrose myocardique","Toute ↑ = urgence cardiaque potentielle","A"],
+    ["BNP","Brain Natriuretic Peptide","< 100","pg/mL","↑ insuffisance cardiaque","> 400 : IC probable","A"],
+    ["Lipase","","< 60","UI/L","Spécifique du pancréas · ↑ pancréatite","> 3N : pancréatite aiguë","A"],
+    ["Amylase","","28–100","UI/L","Pancréas + glandes salivaires","","A"],
+  ]
+},
+{
+  name: "Ionogramme", icon: "⚡", items: [
+    ["Sodium (Na⁺)","Natrémie","136–145","mmol/L","","< 120 : urgence (convulsions)","B"],
+    ["Potassium (K⁺)","Kaliémie","3,5–5,0","mmol/L","","< 2,5 ou > 6,5 : risque cardiaque","B"],
+    ["Chlore (Cl⁻)","Chlorémie","98–106","mmol/L","","","B"],
+    ["Bicarbonates (HCO₃⁻)","Réserve alcaline","22–28","mmol/L","< 22 = acidose · > 28 = alcalose","","B"],
+    ["Calcium total","Calcémie","2,2–2,6","mmol/L (88–104 mg/L)","Corriger selon l'albumine","< 1,8 : tétanie · > 3,5 : crise hypercalcémique","A"],
+    ["Calcium ionisé","","1,15–1,30","mmol/L","Fraction active","","A"],
+    ["Phosphore","Phosphorémie","0,80–1,45","mmol/L","Inversement lié au calcium","","A"],
+    ["Magnésium","Magnésémie","0,75–1,0","mmol/L","↓ = crampes, troubles du rythme","","A"],
+    ["Trou anionique","TA = Na – (Cl + HCO₃)","8–16","mmol/L","↑ acidose à TA augmenté","","A"],
+    ["Osmolalité plasmatique","","280–295","mOsm/kg","","< 270 ou > 320 : anormal","B"],
+    ["Protéines totales","Protidémie","65–80","g/L","","","B"],
+    ["Albumine","","35–50","g/L","↓ dénutrition, inflammation chronique","< 30 : hypoalbuminémie sévère","B"],
+    ["Fer sérique","Sidérémie","H: 65–175 · F: 50–170","µg/dL","","","A"],
+    ["Ferritine","","H: 30–300 · F: 15–200","µg/L (ng/mL)","Stock en fer","< 15 : carence certaine","A"],
+    ["Transferrine","","2,0–3,6","g/L","↑ carence en fer","","A"],
+    ["CST","Coefficient de saturation de la transferrine","20–45","%","< 20 % = carence fonctionnelle","","A"],
+  ]
+},
+{
+  name: "Gaz du sang", icon: "🫁", items: [
+    ["pH artériel","","7,38–7,42","","Acidose < 7,38 · Alcalose > 7,42","< 7,0 ou > 7,7 : incompatible avec la vie","B"],
+    ["PaO₂","Pression partielle en O₂","80–100","mmHg","Diminue avec l'âge","< 60 : insuffisance respiratoire","B"],
+    ["PaCO₂","Pression partielle en CO₂","35–45","mmHg","< 35 = hypocapnie · > 45 = hypercapnie","","B"],
+    ["SaO₂","Saturation artérielle en O₂","95–100","%","","< 90 % : hypoxémie sévère","B"],
+    ["HCO₃⁻ artériel","Bicarbonates","22–26","mmol/L","Composante métabolique","","B"],
+    ["Lactates","","0,5–2,0","mmol/L","↑ hypoperfusion, choc","> 4 : lactates élevés","B"],
+  ]
+},
+{
+  name: "Constantes vitales", icon: "❤️", items: [
+    ["Pression artérielle","PA","120/80","mmHg","Optimale < 120/80","≥ 180/110 : urgence hypertensive","B"],
+    ["Fréquence cardiaque","FC","60–100","bpm","Bradycardie < 60 · Tachycardie > 100","","B"],
+    ["Fréquence respiratoire","FR","12–20","cycles/min","","< 8 ou > 30 : détresse","B"],
+    ["Température corporelle","","36,1–37,8","°C","Fièvre ≥ 38,0 °C","> 40,5 : hyperthermie sévère","B"],
+    ["SpO₂","Saturation pulsée en O₂","95–100","%","","< 90 % : hypoxie","B"],
+    ["Débit cardiaque","DC","4–8","L/min","DC = VES × FC","","B"],
+    ["Volume d'éjection systolique","VES","60–100","mL/battement","","","B"],
+    ["Fraction d'éjection VG","FEVG","55–70","%","< 40 % = IC systolique","","B"],
+    ["Pression veineuse centrale","PVC","2–8","mmHg","","","B"],
+    ["Index cardiaque","IC","2,5–4,0","L/min/m²","DC/surface corporelle","","B"],
+  ]
+},
+{
+  name: "Thyroïde & Hormones", icon: "🦋", items: [
+    ["TSH","Thyréostimuline","0,4–4,0","mUI/L","Dépistage thyroïdien","","B"],
+    ["T4 libre","Thyroxine libre","9–19","pmol/L (0,7–1,5 ng/dL)","","","B"],
+    ["T3 libre","Triiodothyronine libre","3,5–6,5","pmol/L","","","B"],
+    ["Cortisol (8h)","","170–500","nmol/L (6–18 µg/dL)","Cycle nycthéméral","","B"],
+    ["ACTH","","10–50","pg/mL","Le matin","","A"],
+    ["PTH","Parathormone","15–65","pg/mL","Métabolisme phosphocalcique","","A"],
+    ["Vitamine D (25-OH)","","30–60","ng/mL (75–150 nmol/L)","< 20 = carence · < 30 = insuffisance","","B"],
+    ["Prolactine","","F: < 25 · H: < 20","ng/mL","↑ adénome hypophysaire, médicaments","","A"],
+    ["Insuline à jeun","","3–25","µUI/mL","↑ insulinorésistance","","B"],
+    ["PSA","Antigène prostatique spécifique","< 4","ng/mL","Dépistage prostate (controversé)","","A"],
+    ["β-hCG","","< 5 UI/L (non gravide)","UI/L","↑ = grossesse · Doublement toutes les 48h","","A"],
+    ["FSH","Hormone folliculo-stimulante","Phase folliculaire : 3–10","UI/L","↑ ménopause (> 30)","","A"],
+    ["LH","Hormone lutéinisante","Phase folliculaire : 2–8","UI/L","","","A"],
+  ]
+},
+{
+  name: "Urinaire", icon: "🧫", items: [
+    ["Diurèse","","800–1 500","mL/24h","Oligurie < 400 mL · Anurie < 100 mL","","B"],
+    ["pH urinaire","","4,5–8,0","","Varie selon l'alimentation","","B"],
+    ["Densité urinaire","","1,005–1,030","","< 1,005 = dilué · > 1,030 = concentré","","A"],
+    ["Protéinurie","","< 150","mg/24h","> 300 mg = protéinurie pathologique","> 3 g/24h = syndrome néphrotique","A"],
+    ["Albuminurie","Microalbuminurie","< 30","mg/24h","30–300 = microalbuminurie","","A"],
+    ["Natriurèse","Na⁺ urinaire","100–250","mmol/24h","","","A"],
+    ["Kaliurèse","K⁺ urinaire","40–100","mmol/24h","","","A"],
+    ["Créatinine urinaire","","8–16","mmol/24h","Variable selon masse musculaire","","A"],
+    ["Clairance créatinine","","H: 90–140 · F: 80–130","mL/min","≈ DFG (formule de Cockcroft)","","B"],
+    ["Glycosurie","","0 (absence)","","Seuil rénal ≈ 1,80 g/L glycémie","","B"],
+    ["ECBU","Examen cytobactériologique","< 10⁴ leucocytes/mL","","> 10⁵ bactéries/mL + leuco = IU","","A"],
+  ]
+},
+{
+  name: "Métabolisme & Nutrition", icon: "🍎", items: [
+    ["IMC","Indice de masse corporelle","18,5–24,9","kg/m²","< 18,5 = maigreur · > 30 = obésité","","B"],
+    ["Préalbumine","Transthyrétine","200–400","mg/L","Marqueur nutritionnel à court terme","< 110 : dénutrition sévère","A"],
+    ["Folates (B9)","","3–17","ng/mL","↓ anémie mégaloblastique","","A"],
+    ["Vitamine B12","","200–900","pg/mL","↓ Biermer, végétalisme strict","< 150 : carence","A"],
+    ["Acide lactique","Lactates","0,5–2,0","mmol/L","↑ hypoxie tissulaire","","B"],
+    ["Ammoniémie","","< 50","µmol/L","↑ insuffisance hépatique","> 100 : encéphalopathie hépatique","B"],
+    ["Glucose post-prandial (2h)","","< 1,40","g/L (< 7,8 mmol/L)","","","B"],
+    ["Peptide C","","0,5–2,0","ng/mL","Reflet sécrétion insuline endogène","","B"],
+    // ── Composition corporelle ──
+    ["Eau corporelle totale","","H: ≈ 60 % · F: ≈ 50 %","du poids","Diminue avec l'âge","","B"],
+    ["Volume sanguin total","","65–75","mL/kg","≈ 5 L pour un adulte de 70 kg","","B"],
+    ["Surface corporelle","SC","≈ 1,73 (adulte standard)","m²","Mosteller : √((T cm × P kg) / 3600)","","B"],
+    ["Masse grasse","","H: 10–20 % · F: 18–28 %","% du poids","Varie avec l'âge","","B"],
+    // ── Vitamines & minéraux (apports — ANSES adulte) ──
+    ["Vitamine C (apport)","","110","mg/jour","ANSES — référence nutritionnelle adulte","","B"],
+    ["Vitamine A (apport)","","H: 750 · F: 650","µg ER/jour","ANSES — équivalent rétinol","","B"],
+    ["Iode (apport)","","150","µg/jour","ANSES","","B"],
+    ["Zinc (apport)","","H: 11 · F: 8","mg/jour","ANSES","","B"],
+    ["Potassium alimentaire","","≥ 3 500","mg/jour","OMS 2012 — distinct de la kaliémie","","B"],
+    // ── Métabolisme énergétique ──
+    ["Métabolisme basal (MB)","Mifflin-St Jeor","H: 10P+6,25T−5A+5 · F: idem −161","kcal/jour","P en kg, T en cm, A en années · Adulte type ≈ 1 400–1 800","","B"],
+    ["NAP","Niveau d'activité physique","1,2 (sédentaire) à 2,0 (très actif)","","Multiplicateur du MB","","B"],
+    ["DET","Dépense énergétique totale","MB × NAP","kcal/jour","H sédentaire ≈ 2 200 · F sédentaire ≈ 1 800","","B"],
+  ]
+}
+];
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+var currentCat = -1;
+var catItems = [];
+var available = [];
+var reviewQueue = [];
+var known = [];
+var turn = 0;
+var current = null;
+var revealed = false;
+var viewMode = 'cards';
+
+var rebels = [];
+try { var _rs = localStorage.getItem('physio_rebels'); if (_rs) rebels = JSON.parse(_rs) || []; } catch(e) {}
+function saveRebels() { try { localStorage.setItem('physio_rebels', JSON.stringify(rebels)); } catch(e) {} }
+
+// Niveau sélectionné : 'B' (Base), 'A' (Avancé), 'T' (Tous)
+var selectedLevel = 'T';
+try { var _lvl = localStorage.getItem('physio_level'); if (_lvl === 'B' || _lvl === 'A' || _lvl === 'T') selectedLevel = _lvl; } catch(e) {}
+function saveLevel() { try { localStorage.setItem('physio_level', selectedLevel); } catch(e) {} }
+function itemLevel(it) { return it[6] || 'A'; }
+function itemMatchesLevel(it) { return selectedLevel === 'T' || itemLevel(it) === selectedLevel; }
+function filteredItems(cat) {
+  var out = [];
+  for (var i = 0; i < cat.items.length; i++) if (itemMatchesLevel(cat.items[i])) out.push(cat.items[i]);
+  return out;
+}
+
+var progress = {};
+try { var s = localStorage.getItem('physio_progress'); if (s) progress = JSON.parse(s); } catch(e) {}
+function saveProgress() {
+  try { progress[currentCat] = { known: known.length, total: catItems.length }; localStorage.setItem('physio_progress', JSON.stringify(progress)); } catch(e) {}
+}
+
+// ═══════════════════════════════════
+// GROUP GRID
+// ═══════════════════════════════════
+function buildGroupGrid() {
+  var grid = document.getElementById('groupsGrid');
+  grid.innerHTML = '';
+  for (var g = 0; g < CATS.length; g++) {
+    var c = CATS[g];
+    var nFiltered = filteredItems(c).length;
+    var nTotal = c.items.length;
+    var btn = document.createElement('div');
+    btn.className = 'group-btn';
+    var p = progress[g];
+    if (p && p.known >= p.total) btn.className += ' completed';
+    else if (p && p.known > 0) btn.className += ' in-progress';
+    if (nFiltered === 0) btn.className += ' empty-level';
+    var countLabel = (selectedLevel === 'T')
+      ? (nTotal + ' valeurs')
+      : (nFiltered + ' / ' + nTotal + ' valeurs');
+    btn.innerHTML = '<span class="gicon">' + c.icon + '</span><span class="gname">' + c.name + '</span><span class="gcount">' + countLabel + '</span>';
+    (function(gg, nf) {
+      btn.addEventListener('click', function() { if (nf > 0) openGroup(gg); });
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); if (nf > 0) openGroup(gg); }, {passive:false});
+    })(g, nFiltered);
+    grid.appendChild(btn);
+  }
+}
+
+function openGroup(g) { if (viewMode === 'table') showTable(g); else startGroup(g); }
+
+// ═══════════════════════════════════
+// TABLE VIEW
+// ═══════════════════════════════════
+function showTable(g) {
+  var c = CATS[g];
+  document.getElementById('tableTitle').textContent = c.icon + ' ' + c.name;
+  var tbody = document.getElementById('tBody');
+  tbody.innerHTML = '';
+  var items = filteredItems(c);
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + it[0] + '</td>' +
+      '<td class="val-cell">' + it[2] + '</td>' +
+      '<td>' + it[3] + '</td>' +
+      '<td class="note-cell">' + it[4] + '</td>';
+    tbody.appendChild(tr);
+  }
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenTable').classList.add('active');
+}
+
+// ═══════════════════════════════════
+// FLASHCARDS
+// ═══════════════════════════════════
+function startGroup(g) {
+  currentCat = g;
+  var c = CATS[g];
+  catItems = [];
+  var items = filteredItems(c);
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    catItems.push({ idx: i, cat: c.name, name: it[0], aka: it[1], val: it[2], unit: it[3], note: it[4], danger: it[5] });
+  }
+  available = catItems.slice();
+  reviewQueue = []; known = []; turn = 0; revealed = false;
+
+  document.getElementById('groupLabel').textContent = c.icon + ' ' + c.name;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenCard').classList.add('active');
+  showItem();
+}
+
+function goBack() {
+  if (currentCat >= 0) saveProgress();
+  document.getElementById('screenCard').classList.remove('active');
+  document.getElementById('screenTable').classList.remove('active');
+  document.getElementById('screenGroups').classList.add('active');
+  buildGroupGrid();
+  updateMarkBtn();
+}
+
+function pickNext() {
+  var i, pick;
+  var due = [];
+  for (i = 0; i < reviewQueue.length; i++) { if (reviewQueue[i].showAtTurn <= turn) due.push(reviewQueue[i]); }
+  if (due.length > 0) {
+    pick = due[Math.floor(Math.random() * due.length)];
+    reviewQueue = reviewQueue.filter(function(r) { return r !== pick; });
+    return pick.w;
+  }
+  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+  if (reviewQueue.length > 0) {
+    reviewQueue.sort(function(a,b){ return a.showAtTurn - b.showAtTurn; });
+    pick = reviewQueue[0]; reviewQueue = reviewQueue.slice(1); return pick.w;
+  }
+  return null;
+}
+
+function showItem() {
+  current = pickNext();
+  if (!current) {
+    document.getElementById('theCard').style.display = 'none';
+    document.querySelector('.buttons-zone').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('doneBox').style.display = 'block';
+    document.getElementById('doneSummary').textContent = 'Toutes les ' + catItems.length + ' valeurs sont maîtrisées !';
+    saveProgress(); return;
+  }
+  revealed = false;
+  document.getElementById('paramCat').textContent = current.cat;
+  document.getElementById('paramName').textContent = current.name;
+  document.getElementById('paramAka').textContent = current.aka || '';
+  document.getElementById('paramDetails').innerHTML = '<div class="param-hint">Quelle est la valeur normale ?</div>';
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  updateStats();
+  updateMarkBtn();
+}
+
+function doReveal() {
+  if (!current || revealed) return;
+  revealed = true; turn++;
+  var html = '';
+  html += '<div class="val-main">' + current.val + ' <span class="val-unit">' + current.unit + '</span></div>';
+  if (current.note) html += '<div class="val-note">' + current.note + '</div>';
+  if (current.danger) html += '<div class="val-sep"></div><div class="val-danger">⚠ ' + current.danger + '</div>';
+  document.getElementById('paramDetails').innerHTML = html;
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+}
+
+function doKnown() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  known.push(w); saveProgress(); showItem();
+}
+
+function doReview(turns) {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  reviewQueue.push({ w: w, showAtTurn: turn + turns }); showItem();
+}
+
+function updateStats() {
+  var pct = catItems.length > 0 ? Math.round(known.length / catItems.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stats').innerHTML =
+    '✓ Connus\u00A0: <strong>' + known.length + '</strong> · ↻ À revoir\u00A0: <strong>' + reviewQueue.length + '</strong> · Restants\u00A0: <strong>' + available.length + '</strong>';
+}
+
+function doRestart() {
+  available = catItems.slice(); reviewQueue = []; known = []; turn = 0;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  showItem();
+}
+
+function setMode(m) {
+  viewMode = m;
+  document.querySelectorAll('.mode-btn[data-mode]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-mode') === m); });
+}
+
+function setLevel(l) {
+  selectedLevel = l;
+  saveLevel();
+  document.querySelectorAll('.mode-btn[data-level]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-level') === l); });
+  buildGroupGrid();
+}
+
+// ═══════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════
+function tapHandler(id, fn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var touched = false;
+  el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); touched = true; fn(); }, { passive: false });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); }, { passive: false });
+  el.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); if (!touched) fn(); touched = false; });
+}
+
+tapHandler('revealBtn', doReveal);
+tapHandler('knownBtn', doKnown);
+tapHandler('review3Btn', function(){ doReview(3); });
+tapHandler('review5Btn', function(){ doReview(5); });
+tapHandler('restartBtn', doRestart);
+tapHandler('backBtn', goBack);
+tapHandler('backBtn2', goBack);
+tapHandler('backBtnT', goBack);
+tapHandler('modeCards', function(){ setMode('cards'); });
+tapHandler('modeTable', function(){ setMode('table'); });
+tapHandler('levelBase', function(){ setLevel('B'); });
+tapHandler('levelAdv', function(){ setLevel('A'); });
+tapHandler('levelAll', function(){ setLevel('T'); });
+
+// ══════════════════════════════════════════════
+// RÉCALCITRANTS
+// ══════════════════════════════════════════════
+
+function updateMarkBtn() {
+  var btn = document.getElementById('markBtn');
+  var onCard = document.getElementById('screenCard').classList.contains('active');
+  if (!current || !onCard) {
+    btn.disabled = true; btn.classList.remove('marked'); btn.textContent = '⚑'; return;
+  }
+  btn.disabled = false;
+  var marked = rebels.indexOf(current.name) !== -1;
+  btn.classList.toggle('marked', marked);
+  btn.textContent = marked ? '✓' : '⚑';
+  btn.title = marked ? 'Retirer des récalcitrants' : 'Marquer comme récalcitrant';
+}
+
+function updateRebelBadge() {
+  var b = document.getElementById('rebelBadge');
+  b.textContent = rebels.length;
+  b.classList.toggle('empty', rebels.length === 0);
+}
+
+function doRebel() {
+  if (!current) return;
+  var idx = rebels.indexOf(current.name);
+  if (idx === -1) rebels.push(current.name); else rebels.splice(idx, 1);
+  saveRebels(); updateRebelBadge(); updateMarkBtn();
+}
+
+function buildRebelText() {
+  if (rebels.length === 0) return '';
+  var lines = [];
+  for (var i = 0; i < rebels.length; i++) {
+    var name = rebels[i], cat = '';
+    outerLoop: for (var g = 0; g < CATS.length; g++) {
+      for (var j = 0; j < CATS[g].items.length; j++) {
+        if (CATS[g].items[j][0] === name) { cat = CATS[g].name; break outerLoop; }
+      }
+    }
+    lines.push(name + (cat ? '\t(' + cat + ')' : ''));
+  }
+  return lines.join('\n');
+}
+
+function openRebelModal() {
+  document.getElementById('rebelList').value = buildRebelText();
+  var cb = document.getElementById('clearBtn');
+  if (cb.dataset.confirming) {
+    clearTimeout(cb.dataset.timeoutId);
+    cb.textContent = cb.dataset.origText || '🗑 Vider';
+    cb.style.background = ''; cb.style.color = '';
+    delete cb.dataset.confirming; delete cb.dataset.timeoutId; delete cb.dataset.origText;
+  }
+  document.getElementById('rebelModal').classList.add('show');
+}
+
+function closeRebelModal() { document.getElementById('rebelModal').classList.remove('show'); }
+
+function copyRebels() {
+  var ta = document.getElementById('rebelList');
+  if (!ta.value) return;
+  ta.removeAttribute('readonly'); ta.focus(); ta.select(); ta.setSelectionRange(0, 99999);
+  var ok = false; try { ok = document.execCommand('copy'); } catch(e) {}
+  ta.setAttribute('readonly', '');
+  if (navigator.clipboard && !ok) navigator.clipboard.writeText(ta.value).catch(function(){});
+  var btn = document.getElementById('copyBtn'), orig = btn.textContent;
+  btn.textContent = '✓ Copié !'; setTimeout(function(){ btn.textContent = orig; }, 1200);
+}
+
+function clearRebels() {
+  if (rebels.length === 0) return;
+  var btn = document.getElementById('clearBtn');
+  if (!btn.dataset.confirming) {
+    btn.dataset.confirming = '1'; var orig = btn.textContent; btn.dataset.origText = orig;
+    btn.textContent = '⚠ Confirmer ?';
+    btn.style.background = 'linear-gradient(135deg,#a03030,#e04040)'; btn.style.color = 'white';
+    btn.dataset.timeoutId = setTimeout(function() {
+      btn.textContent = btn.dataset.origText || '🗑 Vider';
+      btn.style.background = ''; btn.style.color = '';
+      delete btn.dataset.confirming; delete btn.dataset.timeoutId; delete btn.dataset.origText;
+    }, 3000);
+    return;
+  }
+  clearTimeout(btn.dataset.timeoutId); delete btn.dataset.confirming; delete btn.dataset.timeoutId;
+  btn.textContent = btn.dataset.origText || '🗑 Vider'; btn.style.background = ''; btn.style.color = '';
+  delete btn.dataset.origText;
+  rebels = []; saveRebels(); updateRebelBadge(); updateMarkBtn();
+  document.getElementById('rebelList').value = '';
+}
+
+tapHandler('markBtn', doRebel);
+tapHandler('listBtn', openRebelModal);
+tapHandler('modalCloseBtn', closeRebelModal);
+tapHandler('copyBtn', copyRebels);
+tapHandler('clearBtn', clearRebels);
+
+document.getElementById('rebelModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRebelModal();
+});
+
+updateMarkBtn();
+updateRebelBadge();
+
+// Appliquer le niveau persisté au chargement (active le bon bouton)
+document.querySelectorAll('.mode-btn[data-level]').forEach(function(b) { b.classList.toggle('active', b.getAttribute('data-level') === selectedLevel); });
+
+document.addEventListener('touchmove', function(e) {
+  if (e.target.closest && e.target.closest('#rebelModal')) return;
+  var el = e.target;
+  while (el && el !== document.body && el.nodeType === 1) {
+    if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) return;
+    el = el.parentElement;
+  }
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('screenCard').classList.contains('active')) {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!revealed) doReveal(); }
+    else if (e.code === 'ArrowRight' || e.code === 'KeyK') { if (revealed) doKnown(); }
+    else if (e.code === 'ArrowLeft' || e.code === 'KeyR') { if (revealed) doReview(3); }
+    else if (e.code === 'Escape') goBack();
+  }
+  if (document.getElementById('screenTable').classList.contains('active')) { if (e.code === 'Escape') goBack(); }
+});
+
+buildGroupGrid();
+</script>
+</body>
+</html>

@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Médicaments Essentiels — Pharmacologie</title>
+<style>
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0d1a17;
+    color: #e0e8e5;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  html { height: -webkit-fill-available; overflow: hidden; }
+  .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ── GROUP SELECT ── */
+  .group-select {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 1.8rem;
+  }
+  .group-select h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: #6abaa5;
+    margin-bottom: 0.2rem;
+    flex-shrink: 0;
+  }
+  .group-select .subtitle {
+    font-size: 0.78rem;
+    color: #3d6055;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+  .mode-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    color: #4a7a6a;
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: rgba(80,180,140,0.1);
+    border-color: rgba(80,180,140,0.25);
+    color: #6dd4b0;
+  }
+  .mode-btn:active { transform: scale(0.95); }
+  .filter-label {
+    font-size: 0.62rem;
+    color: #3d6055;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.25rem;
+    flex-shrink: 0;
+  }
+  .filter-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 0.8rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+    max-width: 420px;
+    width: 100%;
+    padding-bottom: 2rem;
+    flex-shrink: 0;
+  }
+  .group-btn {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 12px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .group-btn:active { transform: scale(0.96); }
+  .group-btn .gicon { font-size: 1.5rem; flex-shrink: 0; }
+  .group-btn .gtext { display: flex; flex-direction: column; }
+  .group-btn .gname { font-size: 0.8rem; font-weight: 600; color: #7ac4aa; line-height: 1.3; }
+  .group-btn .gcount { font-size: 0.62rem; color: #3d6055; margin-top: 2px; }
+  .group-btn.completed { border-color: #3a7a50; background: rgba(50,110,70,0.1); }
+  .group-btn.completed .gname { color: #6ada8a; }
+  .group-btn.in-progress { border-color: #5a6a30; background: rgba(80,90,40,0.1); }
+  .group-btn.in-progress .gname { color: #c4d060; }
+
+  /* ── CARD SCREEN ── */
+  .card-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 0.5rem;
+  }
+  .back-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    color: #4a7a6a;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .back-btn:active { opacity: 0.6; }
+  .group-label { font-size: 0.78rem; color: #3d6055; }
+  .progress-track {
+    width: 100%;
+    max-width: 480px;
+    height: 3px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 2px;
+    margin-bottom: 0.8rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2a8a6a, #40c090);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0;
+  }
+
+  /* ── THE CARD ── */
+  .card {
+    width: 100%;
+    max-width: 480px;
+    min-height: 310px;
+    background: linear-gradient(155deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 1.4rem 1.3rem;
+    margin-bottom: 0.8rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -25%;
+    width: 110%;
+    height: 110%;
+    background: radial-gradient(ellipse at 70% 20%, rgba(60,180,130,0.04), transparent 55%);
+    pointer-events: none;
+  }
+  .drug-class {
+    font-size: 0.75rem;
+    color: #4a9a80;
+    align-self: flex-start;
+    margin-bottom: 0.6rem;
+    font-weight: 500;
+  }
+  .drug-name {
+    font-size: 2.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.15;
+    margin-bottom: 0.15rem;
+    width: 100%;
+  }
+  .drug-dci {
+    font-size: 0.78rem;
+    color: #4a7a6a;
+    margin-bottom: 0.7rem;
+    text-align: center;
+  }
+
+  /* Revealed */
+  .drug-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+  }
+  .drug-hint {
+    color: #3d6055;
+    font-size: 0.8rem;
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+  .detail-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .detail-icon {
+    font-size: 0.75rem;
+    width: 20px;
+    flex-shrink: 0;
+    text-align: center;
+    margin-top: 2px;
+  }
+  .detail-label {
+    font-size: 0.62rem;
+    color: #3d6055;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1px;
+  }
+  .detail-text {
+    font-size: 0.82rem;
+    color: #c0d8d0;
+    line-height: 1.4;
+  }
+  .detail-text.moa { color: #6dd4b0; }
+  .detail-text.indic { color: #90c0e0; }
+  .detail-text.danger { color: #e08070; }
+  .detail-text.brand { color: #e8d080; font-weight: 600; }
+  .detail-sep {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,0.04);
+    margin: 0.15rem 0;
+  }
+
+  /* ── BUTTONS ── */
+  .buttons-zone {
+    height: 3.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.3rem;
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+  }
+  .buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    position: absolute;
+  }
+  .buttons.hidden { visibility: hidden; pointer-events: none; }
+  button {
+    padding: 13px 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button:active:not(:disabled) { transform: scale(0.95); opacity: 0.85; }
+  button:disabled { cursor: default; opacity: 0.35; }
+  .btn-reveal {
+    background: linear-gradient(135deg, #2a7a5a, #1a5a40);
+    color: #d0f0e0;
+    min-width: 200px;
+    box-shadow: 0 4px 18px rgba(30,90,60,0.4);
+  }
+  .btn-known {
+    background: linear-gradient(135deg, #2dd49a, #18b88a);
+    color: #0d2a1f;
+    box-shadow: 0 4px 12px rgba(45,212,154,0.3);
+    min-width: 92px;
+  }
+  .btn-plus3 {
+    background: linear-gradient(135deg, #f08aa8, #f5b070);
+    color: #4a1a28;
+    box-shadow: 0 4px 12px rgba(240,138,168,0.3);
+    min-width: 72px;
+  }
+  .btn-plus5 {
+    background: linear-gradient(135deg, #f5b520, #e89010);
+    color: #3a2400;
+    box-shadow: 0 4px 12px rgba(245,181,32,0.3);
+    min-width: 72px;
+  }
+  .glossary {
+    width: 100%;
+    max-width: 480px;
+    margin: 0.4rem auto 1.2rem;
+    padding: 0.7rem 0.9rem;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: #6a8a80;
+    text-align: left;
+  }
+  .glossary.hidden { display: none; }
+  .glossary-title {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #3d6055;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+  }
+  .glossary-item { margin-bottom: 2px; }
+  .glossary-abbr { color: #7ac4aa; font-weight: 600; }
+  .glossary-sep { color: #3d6055; margin: 0 6px; }
+  .btn-restart {
+    background: linear-gradient(135deg, #2a7a5a, #1a5a40);
+    color: #d0f0e0;
+    min-width: 200px;
+  }
+
+  .stats {
+    font-size: 0.72rem;
+    color: #3d6055;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .stats strong { color: #5a9a80; }
+
+  .done-box { text-align: center; padding: 2rem; }
+  .done-box h2 { font-size: 1.7rem; font-weight: 300; color: #6ada8a; margin-bottom: 1rem; }
+  .done-box p { color: #3d6055; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* ── TABLE SCREEN ── */
+  .table-screen {
+    flex-direction: column;
+    padding: 0.8rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 1.2rem;
+  }
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 0.8rem;
+    flex-shrink: 0;
+  }
+  .table-header h2 { font-size: 1.15rem; font-weight: 400; color: #6abaa5; }
+  .table-wrapper {
+    width: 100%;
+    max-width: 700px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 2rem;
+    flex-shrink: 0;
+    /* Indication visuelle subtile qu'on peut scroller horizontalement */
+    background:
+      linear-gradient(to right, #0d1a17 30%, rgba(13,26,23,0)),
+      linear-gradient(to right, rgba(13,26,23,0), #0d1a17 70%) 100% 0,
+      radial-gradient(farthest-side at 0 50%, rgba(106,186,165,0.15), rgba(0,0,0,0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(106,186,165,0.15), rgba(0,0,0,0)) 100% 0;
+    background-repeat: no-repeat;
+    background-size: 30px 100%, 30px 100%, 12px 100%, 12px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+  .ref-table {
+    width: 100%;
+    min-width: 920px;
+    border-collapse: collapse;
+  }
+  .ref-table th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #3d6055;
+    padding: 9px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .ref-table td {
+    font-size: 0.92rem;
+    padding: 9px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.025);
+    color: #90a8a0;
+    vertical-align: top;
+    line-height: 1.45;
+  }
+  .ref-table td:first-child { color: #d0e8e0; font-weight: 600; }
+  .ref-table td.moa-cell { color: #6dd4b0; }
+  .ref-table td.danger-cell { color: #d08070; font-size: 0.86rem; }
+  .ref-table td.brand-cell { color: #e8d080; font-weight: 600; white-space: nowrap; }
+  .ref-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  /* ── RÉCALCITRANTS ── */
+  .floating-btn {
+    position: fixed;
+    top: 14px;
+    width: 42px; height: 42px; padding: 0;
+    border: none; border-radius: 50%;
+    color: white; font-size: 1.1rem; cursor: pointer;
+    z-index: 200; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation;
+  }
+  .floating-btn:active:not(:disabled) { transform: scale(0.92); opacity: 0.85; }
+  .floating-btn:disabled { opacity: 0.25; cursor: default; }
+  #markBtn { left: 14px; background: linear-gradient(135deg, #5a309a, #1a6a9a); }
+  #markBtn.marked { background: linear-gradient(135deg, #2dd49a, #18b88a); color: #0d2a1f; }
+  #listBtn { right: 14px; background: rgba(70,40,140,0.9); }
+  #listBtn .badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #e8d080; color: #1a1a2e;
+    font-size: 0.62rem; font-weight: 800; min-width: 18px; height: 18px;
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    padding: 0 4px; border: 2px solid #0d1a17;
+  }
+  #listBtn .badge.empty { display: none; }
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78); z-index: 300;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #0e2218; border: 1px solid rgba(106,186,165,0.18); border-radius: 16px;
+    width: 100%; max-width: 460px; max-height: 85vh;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal-header {
+    padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.07);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h3 { font-size: 1rem; font-weight: 600; color: #6abaa5; margin: 0; }
+  .modal-close { background: transparent; color: #4a7a6a; font-size: 1.5rem; line-height: 1; padding: 0 8px; font-weight: 300; }
+  .modal-body { padding: 14px 18px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+  #rebelList {
+    width: 100%; min-height: 180px;
+    background: #071410; border: 1px solid rgba(255,255,255,0.07); border-radius: 8px;
+    color: #b0d0c8; font-family: ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+    font-size: 0.82rem; padding: 10px 12px; line-height: 1.55; resize: vertical;
+    -webkit-user-select: text !important; user-select: text !important;
+    -webkit-touch-callout: default !important; touch-action: auto;
+  }
+  #rebelList:focus { outline: 1px solid rgba(106,186,165,0.4); }
+  .modal-footer {
+    padding: 12px 18px 14px; border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between;
+  }
+  .modal-footer button { padding: 10px 16px; font-size: 0.82rem; border-radius: 10px; flex: 1; min-width: 90px; }
+  .btn-copy { background: linear-gradient(135deg, #2dd49a, #18b88a); color: #0d2a1f; }
+  .btn-clear { background: rgba(255,255,255,0.05); color: #c08080; border: 1px solid rgba(200,80,80,0.22); }
+
+  @media (max-width: 400px) {
+    .drug-name { font-size: 1.7rem; }
+    .groups-grid { grid-template-columns: 1fr; }
+    button { padding: 12px 18px; font-size: 0.86rem; }
+    .detail-text { font-size: 0.78rem; }
+  }
+  @media (max-height: 680px) {
+    .card { min-height: 260px; padding: 1.1rem; }
+    .drug-name { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen group-select active" id="screenGroups">
+  <h1>💊 Médicaments Essentiels</h1>
+  <div class="subtitle">Classe · Mécanisme d'action · Indications · EI graves</div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="modeCards" data-mode="cards">Flashcards</div>
+    <div class="mode-btn" id="modeTable" data-mode="table">Tableau</div>
+  </div>
+  <div class="filter-label">Tester sur…</div>
+  <div class="filter-toggle">
+    <div class="mode-btn active" id="filterTout"         data-filter="tout">Tout</div>
+    <div class="mode-btn"        id="filterClasse"       data-filter="classe">Classe</div>
+    <div class="mode-btn"        id="filterSpecialites"  data-filter="specialites">Spécialités</div>
+    <div class="mode-btn"        id="filterIndications"  data-filter="indications">Indications</div>
+    <div class="mode-btn"        id="filterEI"           data-filter="ei">EI</div>
+  </div>
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
+
+<div class="screen card-screen" id="screenCard">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn">← Catégories</button>
+    <span class="group-label" id="groupLabel"></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="card" id="theCard">
+    <div class="drug-class" id="drugClass"></div>
+    <div class="drug-name" id="drugName">&nbsp;</div>
+    <div class="drug-dci" id="drugDci">&nbsp;</div>
+    <div class="drug-details" id="drugDetails"><div class="drug-hint">Mécanisme · Indications · EI graves ?</div></div>
+  </div>
+  <div class="buttons-zone">
+    <div class="buttons" id="revealButtons"><button class="btn-reveal" id="revealBtn">Révéler</button></div>
+    <div class="buttons hidden" id="actionButtons">
+      <button class="btn-known" id="knownBtn">Connu</button>
+      <button class="btn-plus3" id="plus3Btn">+3</button>
+      <button class="btn-plus5" id="plus5Btn">+5</button>
+    </div>
+  </div>
+  <div class="glossary hidden" id="glossary"></div>
+  <div class="stats" id="stats"></div>
+  <div class="done-box" id="doneBox" style="display:none">
+    <h2>✓ Catégorie terminée !</h2>
+    <p id="doneSummary"></p>
+    <button class="btn-restart" id="restartBtn">Recommencer</button>
+    <br><button class="back-btn" id="backBtn2" style="margin-top:12px">← Retour</button>
+  </div>
+</div>
+
+<div class="screen table-screen" id="screenTable">
+  <div class="table-header">
+    <button class="back-btn" id="backBtnT">← Retour</button>
+    <h2 id="tableTitle"></h2>
+  </div>
+  <div class="table-wrapper">
+    <table class="ref-table">
+      <thead><tr><th>DCI</th><th>FR</th><th>DE</th><th>Classe</th><th>Mécanisme</th><th>Indications</th><th>EI graves</th></tr></thead>
+      <tbody id="tBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<button class="floating-btn" id="markBtn" title="Marquer comme récalcitrant" disabled>⚑</button>
+<button class="floating-btn" id="listBtn" title="Voir les récalcitrants">🚩<span class="badge empty" id="rebelBadge">0</span></button>
+
+<div class="modal-overlay" id="rebelModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🚩 Récalcitrants</h3>
+      <button class="modal-close" id="modalCloseBtn">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="rebelList" readonly placeholder="Aucun médicament marqué."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-copy" id="copyBtn">📋 Copier</button>
+      <button class="btn-clear" id="clearBtn">🗑 Vider</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────
+// Boutons flottants récalcitrants
+// ─────────────────────────────────────────────────────────
+var CATS = [
+{
+  name: "Cardiologie", icon: "❤️", items: [
+    ["Amiodarone","Antiarythmique classe III","Bloque canaux K⁺, Na⁺, Ca²⁺ · Allonge le potentiel d'action","FA, flutter, tachycardies ventriculaires","Thyroïdite (hypo/hyper) · Fibrose pulmonaire · Hépatotoxicité · Photosensibilisation · Dépôts cornéens","Cordarone®","Cordarex®"],
+    ["Bisoprolol","Bêtabloquant β1-sélectif","Blocage récepteurs β1-adrénergiques · ↓ FC, ↓ contractilité, ↓ PA","HTA · IC chronique · Angor · Contrôle FC dans la FA","Bradycardie sévère · BAV · Bronchospasme · Masque les hypoglycémies","Detensiel® / Cardensiel®","Concor®"],
+    ["Ramipril","IEC (inhibiteur de l'enzyme de conversion)","Inhibe la conversion angiotensine I → II · ↓ aldostérone","HTA · IC · Post-IDM · Néphroprotection diabétique","Hyperkaliémie · IRA · Toux sèche · Angio-œdème (rare mais grave)","Triatec®","Delix®"],
+    ["Losartan","ARA II (sartan)","Bloque récepteurs AT1 de l'angiotensine II","HTA · IC si intolérance IEC · Néphropathie diabétique","Hyperkaliémie · IRA · CI grossesse (tératogène)","Cozaar®","Lorzaar®"],
+    ["Amlodipine","Inhibiteur calcique (dihydropyridine)","Bloque canaux Ca²⁺ type L vasculaires · Vasodilatation","HTA · Angor stable","Œdèmes des MI · Flush · Tachycardie réflexe","Amlor®","Norvasc®"],
+    ["Furosémide","Diurétique de l'anse","Inhibe co-transporteur Na⁺/K⁺/2Cl⁻ (anse de Henle)","IC aiguë/chronique · Œdèmes · OAP · Hyperkaliémie","Hypokaliémie · Déshydratation · Hyponatrémie · Ototoxicité (fortes doses IV)","Lasilix®","Lasix®"],
+    ["Spironolactone","Anti-aldostérone (diurétique épargneur K⁺)","Antagoniste compétitif de l'aldostérone au TCP","IC sévère (NYHA III-IV) · Hyperaldostéronisme · Ascite cirrhotique","Hyperkaliémie · Gynécomastie · Insuffisance rénale","Aldactone®","Aldactone®"],
+    ["Trinitrine (GTN)","Dérivé nitré","Libère NO → vasodilatation veineuse (↓ précharge) et coronaire","Crise d'angor · SCA · OAP","Hypotension sévère · Céphalées · CI avec IPDE5 (sildénafil)","Natispray®","Nitrolingual®"],
+    ["Digoxine","Digitalique","Inhibe pompe Na⁺/K⁺-ATPase · ↑ Ca²⁺ intracellulaire → inotrope +, chronotrope −","FA (contrôle FC) · IC systolique","Intoxication digitalique (troubles du rythme) · Nausées · Marge thérapeutique étroite","Digoxine Nativelle®","Lanicor®"],
+    ["Atorvastatine","Statine (inhibiteur HMG-CoA réductase)","Inhibe HMG-CoA réductase → ↓ synthèse hépatique de cholestérol","Hypercholestérolémie · Prévention CV primaire et secondaire","Rhabdomyolyse (rare) · Myalgies · Hépatotoxicité · ↑ CPK","Tahor®","Sortis®"],
+    ["Sacubitril/Valsartan","ARNI (inhibiteur néprilysine + ARA II)","Inhibe néprilysine (↑ BNP) + bloque AT1","IC chronique à FEVG altérée","Hypotension · Hyperkaliémie · Angio-œdème · IRA","Entresto®","Entresto®"],
+    ["Ivabradine","Inhibiteur du courant If","Bloque canaux If du nœud sinusal → ↓ FC pure","IC chronique (FC ≥ 75) · Angor si CI bêtabloquants","Phosphènes · Bradycardie · FA","Procoralan®","Procoralan®"],
+  ]
+},
+{
+  name: "Anticoagulants & Antiplaquettaires", icon: "🩸", items: [
+    ["Héparine non fractionnée","Anticoagulant injectable","Potentialise l'antithrombine III → inhibe IIa et Xa","SCA · EP · TVP · CEC","TIH (thrombopénie induite) · Hémorragie · Surveillance TCA obligatoire","Héparine Choay® (sodique IV) / Calciparine® (calcique SC)",""],
+    ["Enoxaparine","HBPM (héparine de bas poids moléculaire)","Potentialise antithrombine III → inhibe surtout Xa","TVP · EP · Prévention thrombose · SCA","Hémorragie · TIH (plus rare) · Accumulation si IR (CI si DFG < 30)","Lovenox®","Clexane®"],
+    ["Rivaroxaban","AOD (anti-Xa direct)","Inhibition directe et réversible du facteur Xa","FA non valvulaire · TVP/EP · Prévention post-chirurgicale","Hémorragie · Pas d'antidote universel (andexanet alfa) · CI si IR sévère","Xarelto®","Xarelto®"],
+    ["Dabigatran","AOD (anti-IIa direct)","Inhibition directe de la thrombine (IIa)","FA non valvulaire · TVP/EP","Hémorragie · Dyspepsie · Antidote : idarucizumab · Élimination rénale (CI si DFG < 30)","Pradaxa®","Pradaxa®"],
+    ["Warfarine / Fluindione","AVK (antivitamine K)","Inhibe la synthèse hépatique des facteurs vit K-dépendants (II, VII, IX, X)","FA · Prothèses valvulaires · TVP/EP","Hémorragie · Nécrose cutanée · Tératogène · INR cible 2–3 · Nombreuses interactions","Coumadine® (warfarine) / Préviscan® (fluindione)","Coumadin® peu prescrite, remplacée par phenprocoumone (Marcumar®)"],
+    ["Aspirine (faible dose)","Antiplaquettaire","Inhibition irréversible de COX-1 → ↓ TXA2 → ↓ agrégation plaquettaire","Prévention CV secondaire · SCA · Post-stent","Hémorragie digestive · Ulcère gastrique · Syndrome de Reye (enfant)","Kardégic®","Aspirin Protect®"],
+    ["Clopidogrel","Antiplaquettaire (thiénopyridine)","Inhibition irréversible du récepteur P2Y12 de l'ADP","SCA · Post-stent (bithérapie) · AOMI · AVC","Hémorragie · PTT (rare) · Résistance biologique · Pro-drogue (métabolisme CYP2C19)","Plavix®","Plavix®"],
+    ["Ticagrélor","Antiplaquettaire (inhibiteur P2Y12)","Inhibition réversible du récepteur P2Y12","SCA (bithérapie avec aspirine) · Post-IDM","Hémorragie · Dyspnée · Bradycardie · Hyperuricémie","Brilique®","Brilique®"],
+  ]
+},
+{
+  name: "Antibiotiques", icon: "🦠", items: [
+    ["Amoxicilline","Pénicilline A (β-lactamine)","Inhibe la synthèse du peptidoglycane (paroi bactérienne) · Bactéricide","ORL · Pneumonie communautaire · H. pylori · Endocardite (prophylaxie)","Allergie (rash, anaphylaxie) · Diarrhée · C. difficile","Clamoxyl®","Amoxypen®"],
+    ["Amoxicilline + Ac. clavulanique","Pénicilline A + inhibiteur β-lactamase","Amox + protection contre β-lactamases","Otite · Sinusite · Morsures · Infections cutanées · Pneumonies","Hépatotoxicité (ac. clavulanique) · Allergie · Diarrhée","Augmentin®","Augmentan®"],
+    ["Céfotaxime / Ceftriaxone","C3G (céphalosporine 3ᵉ génération)","Inhibe synthèse paroi · Large spectre Gram−","Méningite · Pyélonéphrite · Sepsis · Pneumonie sévère","Allergie croisée pénicillines (5-10 %) · Lithiase biliaire (ceftriaxone) · C. difficile","Claforan® / Rocéphine®","Claforan® / Rocephin®"],
+    ["Métronidazole","Nitro-imidazolé","Forme des radicaux libres toxiques pour l'ADN en anaérobiose","Infections anaérobies · C. difficile · Amibiase · H. pylori","Effet antabuse (alcool) · Neuropathie périphérique · Goût métallique","Flagyl®","Clont®"],
+    ["Gentamicine","Aminoside","Fixation irréversible sur sous-unité 30S ribosome · Bactéricide","Endocardite (synergie) · Sepsis sévère · Pyélonéphrite (probabiliste)","Néphrotoxicité · Ototoxicité (irréversible) · Dosage pic/résiduel obligatoire","Gentalline®","Refobacin®"],
+    ["Ciprofloxacine","Fluoroquinolone (FQ)","Inhibe ADN gyrase et topoisomérase IV","IU compliquées · Infections ostéo-articulaires · Légionellose","Tendinopathie / rupture tendon d'Achille · Allongement QT · Neuropathie · Photosensibilisation","Ciflox®","Ciprobay®"],
+    ["Vancomycine","Glycopeptide","Inhibe synthèse paroi (liaison D-Ala-D-Ala) · Bactéricide lente","SARM · Endocardite à staphylocoque · C. difficile (PO)","Néphrotoxicité · Red man syndrome (perfusion rapide) · Ototoxicité","Vancocine®","Vancocin®"],
+    ["Cotrimoxazole (TMP-SMX)","Sulfamide + triméthoprime","Double blocage synthèse acide folique bactérien","Pneumocystose · IU · Toxoplasmose (prophylaxie)","Toxidermie (Lyell, SJS) · Myélotoxicité · Hyperkaliémie · Allergie sulfamides","Bactrim®","Bactrim®"],
+    ["Doxycycline","Cycline (tétracycline)","Fixation réversible sous-unité 30S · Bactériostatique","Chlamydia · Maladie de Lyme · Paludisme (prophylaxie) · Acné","Photosensibilisation · Ulcérations œsophagiennes · CI enfant < 8 ans (dents) · CI grossesse","Vibramycine®","Vibramycin®"],
+    ["Azithromycine","Macrolide","Fixation réversible sous-unité 50S · Bactériostatique","IST (chlamydia) · Pneumonie atypique · Angine si allergie pénicilline","Allongement QT · Hépatotoxicité · Interactions CYP3A4 · Diarrhée","Zithromax®","Zithromax®"],
+    ["Linézolide","Oxazolidinone","Inhibe initiation traduction (50S) · Bactériostatique","SARM · ERV · Infections résistantes","Myélotoxicité (thrombopénie) · Neuropathie optique · Syndrome sérotoninergique · Acidose lactique","Zyvoxid®","Zyvoxid®"],
+  ]
+},
+{
+  name: "Antalgiques & AINS", icon: "💊", items: [
+    ["Paracétamol","Antalgique palier 1 / Antipyrétique","Mécanisme central mal élucidé (COX-3 ? endocannabinoïdes ?)","Douleur légère à modérée · Fièvre","Hépatotoxicité (dose-dépendante, seuil 4g/j) · Cytolyse → insuffisance hépatique aiguë si surdosage","",""],
+    ["Ibuprofène","AINS non sélectif","Inhibition COX-1 et COX-2 → ↓ prostaglandines","Douleur · Fièvre · Inflammation · Dysménorrhée","UGD · Hémorragie digestive · IRA · ↑ risque CV · Bronchospasme (asthme)","",""],
+    ["Kétoprofène","AINS (acide arylcarboxylique)","Inhibition non sélective COX-1/COX-2","Douleur inflammatoire · Post-opératoire · Colique néphrétique","Idem AINS + photosensibilisation (gel) · Réactions cutanées sévères","",""],
+    ["Morphine","Opioïde palier 3 (agoniste µ)","Agoniste récepteurs µ opioïdes centraux et périphériques","Douleur sévère aiguë/chronique · OAP (vasodilatation)","Dépression respiratoire · Constipation · Nausées · Dépendance · Rétention urinaire","",""],
+    ["Tramadol","Opioïde palier 2 + IRSN","Agoniste µ faible + inhibition recapture 5-HT et NA","Douleur modérée à sévère","Convulsions · Syndrome sérotoninergique · Dépression respiratoire · Dépendance","",""],
+    ["Codéine","Opioïde palier 2","Pro-drogue → morphine (CYP2D6)","Douleur modérée · Toux (en association)","Dépression respiratoire (métaboliseurs ultra-rapides) · Constipation · CI < 12 ans","",""],
+    ["Néfopam","Antalgique central non opioïde","Inhibe recapture DA, NA, 5-HT · Pas d'action sur récepteurs opioïdes","Douleur aiguë post-opératoire","Tachycardie · Sueurs · Rétention urinaire · Convulsions (surdosage) · CI glaucome, épilepsie","",""],
+    ["Prednisone / Prednisolone","Corticoïde (glucocorticoïde)","Liaison récepteur GC → action anti-inflammatoire et immunosuppressive","Maladies auto-immunes · Asthme sévère · Allergie · Greffe","Diabète cortico-induit · Ostéoporose · Infections · Insuffisance surrénale (sevrage) · Cushing iatrogène","",""],
+  ]
+},
+{
+  name: "Neurologie & Psychiatrie", icon: "🧠", items: [
+    ["Lévodopa + Carbidopa","Précurseur dopamine + inhibiteur DDC","L-DOPA → dopamine dans le SNC · Carbidopa empêche conversion périphérique","Maladie de Parkinson","Dyskinésies · Fluctuations motrices (on/off) · Nausées · Hypotension · Hallucinations","",""],
+    ["Acide valproïque","Antiépileptique à large spectre","↑ GABA · Bloque canaux Na⁺ · Inhibe HDAC","Épilepsie généralisée · Troubles bipolaires · Migraine","Hépatotoxicité fulminante · Tératogène majeur (CI grossesse) · Pancréatite · Thrombopénie","",""],
+    ["Carbamazépine","Antiépileptique (dibenzazépine)","Bloque canaux Na⁺ voltage-dépendants","Épilepsie partielle · Névralgie du trijumeau · Trouble bipolaire","Syndrome de Lyell/SJS (HLA-B*1502) · Agranulocytose · Hyponatrémie · Inducteur enzymatique puissant","",""],
+    ["Lévétiracétam","Antiépileptique","Fixation SV2A (modulation libération neurotransmetteurs)","Épilepsie partielle et généralisée","Troubles psychiatriques (irritabilité, agressivité) · Peu d'interactions médicamenteuses","",""],
+    ["Fluoxétine","ISRS (inhibiteur sélectif recapture sérotonine)","Inhibe sélectivement recapture 5-HT → ↑ 5-HT synaptique","Dépression · TOC · Boulimie · Anxiété","Syndrome sérotoninergique · Hyponatrémie · Levée d'inhibition (risque suicidaire initial) · Allongement QT","",""],
+    ["Venlafaxine","IRSNa (inhibiteur recapture 5-HT et NA)","Inhibe recapture sérotonine + noradrénaline","Dépression résistante · TAG · Phobie sociale","HTA dose-dépendante · Syndrome sérotoninergique · Syndrome de sevrage · Cardiotoxicité en surdosage","",""],
+    ["Lithium","Thymorégulateur (sels de lithium)","Mécanisme complexe : modulation 2nd messagers (IP3, GSK-3)","Trouble bipolaire (prophylaxie) · Épisode maniaque","Marge thérapeutique étroite (0,6–0,8 mmol/L) · Néphrotoxicité · Hypothyroïdie · Tremblements · Diabète insipide néphrogénique","",""],
+    ["Halopéridol","Neuroleptique typique (butyrophénone)","Antagoniste D2 dopaminergique","Psychoses aiguës · Agitation · Vomissements","Syndrome extrapyramidal · Dyskinésies tardives · Syndrome malin des NL · Allongement QT","",""],
+    ["Rispéridone","Antipsychotique atypique","Antagoniste D2 + 5-HT2A","Schizophrénie · Épisodes maniaques · Agressivité","Syndrome métabolique · Prise de poids · Hyperprolactinémie · Syndrome extrapyramidal (dose-dépendant)","",""],
+    ["Diazépam","Benzodiazépine (longue durée)","Potentialise GABA-A → ↑ fréquence ouverture canal Cl⁻","Anxiété · Crise convulsive · Sevrage alcoolique · Spasticité","Dépression respiratoire · Dépendance · Amnésie · Effet paradoxal (agitation) · Chutes (sujet âgé)","",""],
+    ["Zolpidem","Hypnotique (apparenté BZD)","Agoniste sélectif sous-unité α1 récepteur GABA-A","Insomnie (courte durée)","Somnambulisme · Comportements complexes nocturnes · Dépendance · Amnésie","",""],
+  ]
+},
+{
+  name: "Pneumologie", icon: "🫁", items: [
+    ["Salbutamol","β2-mimétique de courte durée (BDCA)","Agoniste β2 → relaxation muscle lisse bronchique","Crise d'asthme · Bronchospasme","Tachycardie · Tremblements · Hypokaliémie (fortes doses) · Céphalées","",""],
+    ["Salmétérol / Formotérol","β2-mimétique de longue durée (BDLA)","Agoniste β2 longue durée → bronchodilatation prolongée","Asthme (toujours avec CSI) · BPCO","Tachycardie · ↑ mortalité si utilisé seul dans l'asthme (sans CSI) · Tremblements","",""],
+    ["Budésonide / Fluticasone","Corticoïde inhalé (CSI)","Anti-inflammatoire local → ↓ inflammation bronchique","Asthme (traitement de fond) · BPCO (si exacerbations)","Candidose oropharyngée · Dysphonie · Ostéoporose (fortes doses au long cours)","",""],
+    ["Tiotropium","Anticholinergique inhalé (LAMA)","Antagoniste muscarinique M3 → bronchodilatation","BPCO (traitement de fond)","Sécheresse buccale · Rétention urinaire · Glaucome aigu (si projection oculaire)","",""],
+    ["Montélukast","Anti-leucotriène","Antagoniste récepteur CysLT1 des leucotriènes","Asthme (complément) · Asthme d'effort · Rhinite allergique","Troubles neuropsychiatriques (dépression, idées suicidaires) · Céphalées","",""],
+    ["N-acétylcystéine (NAC)","Mucolytique / Antidote","Rompt ponts disulfure du mucus · Précurseur glutathion","Bronchite chronique · Mucoviscidose · Antidote paracétamol","Bronchospasme (nébulisation) · Nausées · Réaction anaphylactoïde (IV)","",""],
+  ]
+},
+{
+  name: "Endocrinologie", icon: "🦋", items: [
+    ["Insuline rapide (Aspart)","Insuline analogue rapide","Mime l'insuline endogène → ↑ captation glucose cellulaire","DT1 · DT2 (bolus prandial) · Urgence hyperglycémique","Hypoglycémie sévère · Lipodystrophie · Prise de poids · Hypokaliémie","",""],
+    ["Insuline lente (Glargine)","Insuline analogue basale","Libération lente → couverture basale ~24h","DT1 et DT2 (insuline basale)","Hypoglycémie (moins que NPH) · Lipodystrophie · Prise de poids","",""],
+    ["Metformine","Biguanide","↓ production hépatique de glucose · ↑ sensibilité insuline · ↑ captation musculaire","DT2 (1ʳᵉ intention) · SOPK","Acidose lactique (rare, si IR) · Troubles digestifs · Carence B12 · CI si DFG < 30","",""],
+    ["Gliclazide","Sulfamide hypoglycémiant","Stimule sécrétion d'insuline (fixation SUR1 sur cellules β)","DT2 (si metformine insuffisante)","Hypoglycémie (prolongée) · Prise de poids · Allergie sulfamides","",""],
+    ["Empagliflozine","Gliflozine (inhibiteur SGLT2)","Inhibe réabsorption rénale du glucose → glycosurie","DT2 · IC (même sans diabète) · Néphroprotection","Infections urogénitales (mycoses) · Acidocétose euglycémique · Déshydratation · Amputation (canagliflozine)","",""],
+    ["Sémaglutide","Agoniste GLP-1","Mime le GLP-1 → ↑ insuline glucose-dépendante, ↓ glucagon, ralentit vidange gastrique","DT2 · Obésité (forte dose)","Nausées/vomissements · Pancréatite · Tumeurs thyroïdiennes C (animal) · CI ATCD médullaire thyroïde","",""],
+    ["Lévothyroxine","Hormone thyroïdienne (T4)","Apport exogène de T4 → conversion en T3 active","Hypothyroïdie · Post-thyroïdectomie · Myxœdème","Surdosage : tachycardie, angor, FA · Marge thérapeutique étroite · Nombreuses interactions (fer, calcium)","",""],
+    ["Carbimazole","Antithyroïdien de synthèse","Inhibe thyroperoxydase → ↓ synthèse T3/T4","Hyperthyroïdie (Basedow, nodule toxique)","Agranulocytose (urgence : fièvre + angine) · Hépatotoxicité · Tératogène 1er trimestre","",""],
+  ]
+},
+{
+  name: "Gastro-entérologie", icon: "🏥", items: [
+    ["Oméprazole","IPP (inhibiteur pompe à protons)","Inhibe H⁺/K⁺-ATPase (pompe à protons) des cellules pariétales gastriques","RGO · UGD · Éradication H. pylori · Prévention ulcère sous AINS","Hypomagnesémie · Infections (C. difficile, pneumonie) · Fractures ostéoporotiques · Néphrite interstitielle","",""],
+    ["Métoclopramide","Antiémétique / Prokinétique","Antagoniste D2 central (CTZ) + agoniste 5-HT4 périphérique","Nausées/vomissements · Gastroparésie","Syndrome extrapyramidal · Dyskinésies tardives · Allongement QT · CI < 1 an · Durée max 5 jours","",""],
+    ["Ondansétron","Antiémétique (sétron)","Antagoniste récepteurs 5-HT3 (CTZ et nerf vague)","Nausées/vomissements chimio-induits · Post-opératoires","Allongement QT · Constipation · Céphalées","",""],
+    ["Lopéramide","Antidiarrhéique opioïde","Agoniste µ périphérique → ↓ péristaltisme, ↑ tonus sphincter","Diarrhée aiguë (symptomatique) · Diarrhée chronique","Iléus paralytique · Mégacôlon toxique (si C. difficile ou colite) · Cardiotoxicité si surdosage","",""],
+    ["Acide ursodésoxycholique","Acide biliaire","↓ sécrétion biliaire de cholestérol · Cytoprotection hépatocyte · ↓ hydrophobicité bile","Cholestase (CBP) · Lithiase biliaire cholestérolique","Diarrhée · Calcification des calculs (CI calculs calcifiés)","",""],
+    ["Lactulose","Laxatif osmotique / Traitement encéphalopathie","↑ pression osmotique → appel d'eau · ↓ absorption NH₃","Constipation · Encéphalopathie hépatique","Ballonnements · Diarrhée · Troubles électrolytiques (usage excessif)","",""],
+    ["Mésalazine (5-ASA)","Anti-inflammatoire intestinal","Action anti-inflammatoire topique sur muqueuse intestinale","Rectocolite hémorragique (maintien et poussée) · Maladie de Crohn colique","Néphrotoxicité (néphrite interstitielle) · Pancréatite · Myocardite/péricardite (rare)","",""],
+  ]
+},
+{
+  name: "Immunologie & Divers", icon: "🛡️", items: [
+    ["Méthotrexate","Antimétabolite (antifolate)","Inhibe dihydrofolate réductase → ↓ synthèse ADN · Immunosuppresseur à faible dose","PR · Psoriasis · LED · Cancers (forte dose)","Myélotoxicité · Fibrose pulmonaire · Hépatotoxicité · Tératogène (contraception obligatoire) · Mucite","",""],
+    ["Azathioprine","Immunosuppresseur (thiopurine)","Pro-drogue → 6-mercaptopurine → inhibe synthèse purines","Greffe (prévention rejet) · MICI · Hépatite auto-immune","Myélotoxicité · Hépatotoxicité · ↑ risque lymphome · Doser TPMT avant traitement","",""],
+    ["Ciclosporine","Inhibiteur calcineurine","Inhibe calcineurine → ↓ IL-2 → ↓ activation LT","Greffe (prévention rejet) · Psoriasis sévère · Uvéite","Néphrotoxicité · HTA · Hirsutisme · Hyperplasie gingivale · Marge thérapeutique étroite","",""],
+    ["Adalimumab","Anti-TNFα (anticorps monoclonal)","Neutralise TNF-α → ↓ inflammation","PR · SpA · Crohn · RCH · Psoriasis","Infections sévères (tuberculose ++) · Réactivation hépatite B · Lupus induit · ↑ risque lymphome","",""],
+    ["Hydroxychloroquine","Antipaludéen de synthèse","Immunomodulateur (mécanisme complexe : ↓ TLR, ↓ présentation Ag)","Lupus · PR · Syndrome des antiphospholipides","Rétinopathie (irréversible, surveillance ophtalmo) · Allongement QT · Cardiotoxicité chronique","",""],
+    ["Allopurinol","Inhibiteur xanthine oxydase","↓ production acide urique","Hyperuricémie · Prévention crise de goutte","Syndrome DRESS · Syndrome de Lyell/SJS (HLA-B*5801) · Hépatite · Cytopénie · NE PAS débuter en crise","",""],
+    ["Colchicine","Anti-inflammatoire (alcaloïde)","Inhibe polymérisation microtubules → ↓ migration PNN · ↓ inflammasome","Crise de goutte · Péricardite · Fièvre méditerranéenne familiale","Diarrhée (dose-dépendante) · Myélotoxicité · Index thérapeutique étroit · Interactions (macrolides)","",""],
+    ["Adrénaline","Catécholamine (sympathomimétique)","Agoniste α1 (vasoconstriction) + β1 (inotrope/chronotrope +) + β2 (bronchodilatation)","Choc anaphylactique · ACR · Choc cardiogénique","HTA · Troubles du rythme · Nécrose si extravasation · Dose-dépendant","",""],
+  ]
+}
+];
+
+// ═══════════════════
+// STATE
+// ═══════════════════
+var currentCat = -1, catItems = [], available = [], reviewQueue = [], known = [], turn = 0, current = null, revealed = false, viewMode = 'cards', quizFilter = 'tout';
+var rebels = [];
+try { var _rs = localStorage.getItem('pharma_rebels'); if (_rs) rebels = JSON.parse(_rs) || []; } catch(e) {}
+function saveRebels() { try { localStorage.setItem('pharma_rebels', JSON.stringify(rebels)); } catch(e) {} }
+
+// ═════════════════════════════════════════════════════════
+// GLOSSAIRE DYNAMIQUE — abréviations sélectionnées
+// ═════════════════════════════════════════════════════════
+var ABBR_MAP = {
+  "IDM": "Infarctus du myocarde",
+  "SCA": "Syndrome coronarien aigu",
+  "FA": "Fibrillation auriculaire",
+  "AOMI": "Artériopathie oblitérante des membres inférieurs",
+  "PAS": "Pression artérielle systolique",
+  "MI": "Membres inférieurs",
+  "NYHA": "New York Heart Association (classification IC)",
+  "BNP": "Peptide natriurétique de type B",
+  "CEC": "Circulation extra-corporelle",
+  "ACR": "Arrêt cardio-respiratoire",
+  "GTN": "Glyceryl trinitrate (trinitrine)",
+  "EP": "Embolie pulmonaire",
+  "TVP": "Thrombose veineuse profonde",
+  "AOD": "Anticoagulant oral direct",
+  "TIH": "Thrombopénie induite par l'héparine",
+  "INR": "International Normalized Ratio",
+  "PTT": "Purpura thrombotique thrombocytopénique",
+  "ARA II": "Antagoniste des récepteurs de l'angiotensine II",
+  "ARNI": "Angiotensin Receptor-Neprilysin Inhibitor",
+  "BZD": "Benzodiazépine",
+  "ISRS": "Inhibiteur sélectif de la recapture de la sérotonine",
+  "IRSN": "Inhibiteur de la recapture sérotonine-noradrénaline",
+  "BDCA": "Bronchodilatateur de courte durée d'action",
+  "BDLA": "Bronchodilatateur de longue durée d'action",
+  "LAMA": "Long-Acting Muscarinic Antagonist",
+  "CSI": "Corticostéroïde inhalé",
+  "NL": "Neuroleptique",
+  "FQ": "Fluoroquinolone",
+  "HDAC": "Histone désacétylase",
+  "GLP": "Glucagon-Like Peptide",
+  "NPH": "Neutral Protamine Hagedorn (insuline intermédiaire)",
+  "NAC": "N-acétylcystéine",
+  "GC": "Glucocorticoïde",
+  "IRA": "Insuffisance rénale aiguë",
+  "DFG": "Débit de filtration glomérulaire",
+  "TCP": "Tubule contourné proximal",
+  "TAG": "Trouble anxieux généralisé",
+  "NA": "Noradrénaline",
+  "DDC": "DOPA décarboxylase",
+  "GSK-3": "Glycogène synthase kinase 3",
+  "RCH": "Recto-colite hémorragique",
+  "CTZ": "Chemoreceptor trigger zone (zone gâchette chimioréceptrice)",
+  "PR": "Polyarthrite rhumatoïde",
+  "LED": "Lupus érythémateux disséminé",
+  "LT": "Leucotriène",
+  "DRESS": "Drug Reaction with Eosinophilia and Systemic Symptoms",
+  "SJS": "Syndrome de Stevens-Johnson",
+  "SARM": "Staphylococcus aureus résistant à la méthicilline",
+  "ERV": "Entérocoque résistant à la vancomycine",
+  "IU": "Infection urinaire",
+  "SMX": "Sulfaméthoxazole",
+  "TMP": "Triméthoprime",
+  "TPMT": "Thiopurine S-méthyltransférase",
+  "CBP": "Cancer bronchique primitif",
+  "ATCD": "Antécédents",
+  "PO": "Per os (par voie orale)",
+  "CPK": "Créatine phosphokinase",
+  "PNN": "Polynucléaire neutrophile",
+  "SOPK": "Syndrome des ovaires polykystiques"
+};
+
+// Construction de l'expression régulière (clés triées par longueur décroissante
+// pour que "ARA II" soit testé avant "II", etc.)
+var ABBR_KEYS = Object.keys(ABBR_MAP).sort(function(a, b){ return b.length - a.length; });
+function escRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+var ABBR_REGEX = new RegExp('(?:^|[^A-Za-z0-9À-ÿ])(' + ABBR_KEYS.map(escRegex).join('|') + ')(?=$|[^A-Za-z0-9À-ÿ])', 'g');
+
+function buildGlossary(text) {
+  var found = {}, m;
+  ABBR_REGEX.lastIndex = 0;
+  while ((m = ABBR_REGEX.exec(text)) !== null) {
+    found[m[1]] = true;
+    // recule d'un caractère pour permettre le chevauchement (l'espace avant peut servir de séparateur pour la suivante)
+    if (m.index === ABBR_REGEX.lastIndex) ABBR_REGEX.lastIndex++;
+  }
+  var keys = Object.keys(found);
+  // tri dans l'ordre où ils sont déclarés dans ABBR_KEYS (longueurs décroissantes), puis alphabétique pour l'affichage
+  keys.sort();
+  var el = document.getElementById('glossary');
+  if (keys.length === 0) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  var html = '<div class="glossary-title">Abréviations</div>';
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i];
+    html += '<div class="glossary-item"><span class="glossary-abbr">' + k + '</span><span class="glossary-sep">·</span>' + ABBR_MAP[k] + '</div>';
+  }
+  el.innerHTML = html;
+  el.classList.remove('hidden');
+}
+var progress = {};
+try { var s = localStorage.getItem('pharma_progress'); if (s) progress = JSON.parse(s); } catch(e) {}
+function saveProgress() { try { progress[currentCat] = { known: known.length, total: catItems.length }; localStorage.setItem('pharma_progress', JSON.stringify(progress)); } catch(e) {} }
+
+function buildGroupGrid() {
+  var grid = document.getElementById('groupsGrid'); grid.innerHTML = '';
+  for (var g = 0; g < CATS.length; g++) {
+    var c = CATS[g], btn = document.createElement('div');
+    btn.className = 'group-btn';
+    var p = progress[g];
+    if (p && p.known >= p.total) btn.className += ' completed';
+    else if (p && p.known > 0) btn.className += ' in-progress';
+    btn.innerHTML = '<span class="gicon">' + c.icon + '</span><div class="gtext"><span class="gname">' + c.name + '</span><span class="gcount">' + c.items.length + ' médicaments</span></div>';
+    (function(gg) {
+      btn.addEventListener('click', function() { openGroup(gg); });
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); openGroup(gg); }, {passive:false});
+    })(g);
+    grid.appendChild(btn);
+  }
+}
+
+function openGroup(g) { if (viewMode === 'table') showTable(g); else startGroup(g); }
+
+function showTable(g) {
+  var c = CATS[g];
+  document.getElementById('tableTitle').textContent = c.icon + ' ' + c.name;
+  var tbody = document.getElementById('tBody'); tbody.innerHTML = '';
+  for (var i = 0; i < c.items.length; i++) {
+    var it = c.items[i], tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + it[0] + '</td><td class="brand-cell">' + (it[5] || '') + '</td><td class="brand-cell">' + (it[6] || '') + '</td><td>' + it[1] + '</td><td class="moa-cell">' + it[2] + '</td><td>' + it[3] + '</td><td class="danger-cell">' + it[4] + '</td>';
+    tbody.appendChild(tr);
+  }
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenTable').classList.add('active');
+}
+
+function startGroup(g) {
+  currentCat = g;
+  var c = CATS[g]; catItems = [];
+  for (var i = 0; i < c.items.length; i++) {
+    var it = c.items[i];
+    catItems.push({ idx: i, cat: c.name, dci: it[0], classe: it[1], moa: it[2], indic: it[3], danger: it[4], brandFr: it[5] || '', brandDe: it[6] || '' });
+  }
+  available = catItems.slice(); reviewQueue = []; known = []; turn = 0; revealed = false;
+  document.getElementById('groupLabel').textContent = c.icon + ' ' + c.name;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenCard').classList.add('active');
+  showItem();
+}
+
+function goBack() {
+  if (currentCat >= 0) saveProgress();
+  document.getElementById('screenCard').classList.remove('active');
+  document.getElementById('screenTable').classList.remove('active');
+  document.getElementById('screenGroups').classList.add('active');
+  buildGroupGrid();
+  updateMarkBtn();
+}
+
+function pickNext() {
+  var i, pick, due = [];
+  for (i = 0; i < reviewQueue.length; i++) { if (reviewQueue[i].t <= turn) due.push(reviewQueue[i]); }
+  if (due.length > 0) { pick = due[Math.floor(Math.random() * due.length)]; reviewQueue = reviewQueue.filter(function(r){ return r !== pick; }); return pick.w; }
+  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+  if (reviewQueue.length > 0) { reviewQueue.sort(function(a,b){ return a.t - b.t; }); pick = reviewQueue[0]; reviewQueue = reviewQueue.slice(1); return pick.w; }
+  return null;
+}
+
+function showItem() {
+  current = pickNext();
+  if (!current) {
+    document.getElementById('theCard').style.display = 'none';
+    document.querySelector('.buttons-zone').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('doneBox').style.display = 'block';
+    document.getElementById('doneSummary').textContent = 'Les ' + catItems.length + ' médicaments sont maîtrisés !';
+    saveProgress(); return;
+  }
+  revealed = false;
+  document.getElementById('drugClass').textContent = '';
+  document.getElementById('drugName').textContent = current.dci;
+  document.getElementById('drugDci').textContent = '';
+  var hintMap = { tout: 'Classe · Spécialités · Indications · EI graves ?', classe: 'Quelle est la classe ?', specialites: 'Quelles sont les spécialités (🇫🇷 / 🇩🇪) ?', indications: 'Quelles sont les indications ?', ei: 'Quels sont les EI graves ?' };
+  document.getElementById('drugDetails').innerHTML = '<div class="drug-hint">' + (hintMap[quizFilter] || hintMap.tout) + '</div>';
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  document.getElementById('glossary').classList.add('hidden');
+  updateStats();
+  updateMarkBtn();
+}
+
+function doReveal() {
+  revealed = true; turn++;
+  var f = quizFilter;
+  document.getElementById('drugClass').textContent = (f === 'tout' || f === 'classe') ? current.classe : '';
+  var h = '';
+  if (f === 'classe') {
+    h = '<div class="detail-row"><span class="detail-icon">🏷️</span><div><div class="detail-label">Classe</div><div class="detail-text">' + current.classe + '</div></div></div>';
+  } else if (f === 'specialites') {
+    if (current.brandFr) {
+      h += '<div class="detail-row"><span class="detail-icon">🇫🇷</span><div><div class="detail-label">Spécialité (France)</div><div class="detail-text brand">' + current.brandFr + '</div></div></div>';
+      if (current.brandDe) h += '<div class="detail-sep"></div>';
+    }
+    if (current.brandDe) {
+      h += '<div class="detail-row"><span class="detail-icon">🇩🇪</span><div><div class="detail-label">Spezialität (Deutschland)</div><div class="detail-text brand">' + current.brandDe + '</div></div></div>';
+    }
+    if (!current.brandFr && !current.brandDe) h = '<div class="drug-hint">Aucune spécialité renseignée.</div>';
+  } else if (f === 'indications') {
+    h = '<div class="detail-row"><span class="detail-icon">🎯</span><div><div class="detail-label">Indications</div><div class="detail-text indic">' + current.indic + '</div></div></div>';
+  } else if (f === 'ei') {
+    h = '<div class="detail-row"><span class="detail-icon">⚠️</span><div><div class="detail-label">Effets indésirables graves</div><div class="detail-text danger">' + current.danger + '</div></div></div>';
+  } else {
+    if (current.brandFr) {
+      h += '<div class="detail-row"><span class="detail-icon">🇫🇷</span><div><div class="detail-label">Spécialité (France)</div><div class="detail-text brand">' + current.brandFr + '</div></div></div>';
+      h += '<div class="detail-sep"></div>';
+    }
+    if (current.brandDe) {
+      h += '<div class="detail-row"><span class="detail-icon">🇩🇪</span><div><div class="detail-label">Spezialität (Deutschland)</div><div class="detail-text brand">' + current.brandDe + '</div></div></div>';
+      h += '<div class="detail-sep"></div>';
+    }
+    h += '<div class="detail-row"><span class="detail-icon">⚙️</span><div><div class="detail-label">Mécanisme d\'action</div><div class="detail-text moa">' + current.moa + '</div></div></div>';
+    h += '<div class="detail-sep"></div>';
+    h += '<div class="detail-row"><span class="detail-icon">🎯</span><div><div class="detail-label">Indications</div><div class="detail-text indic">' + current.indic + '</div></div></div>';
+    h += '<div class="detail-sep"></div>';
+    h += '<div class="detail-row"><span class="detail-icon">⚠️</span><div><div class="detail-label">Effets indésirables graves</div><div class="detail-text danger">' + current.danger + '</div></div></div>';
+  }
+  document.getElementById('drugDetails').innerHTML = h;
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+  var glossaryText = '';
+  if (f === 'tout') glossaryText = current.classe + ' ' + current.moa + ' ' + current.indic + ' ' + current.danger;
+  else if (f === 'classe') glossaryText = current.classe;
+  else if (f === 'indications') glossaryText = current.indic;
+  else if (f === 'ei') glossaryText = current.danger;
+  buildGlossary(glossaryText);
+}
+
+function doKnown() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  known.push(w); saveProgress(); showItem();
+}
+function doReview(delay) {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  reviewQueue.push({ w: w, t: turn + (delay || 3) }); showItem();
+}
+function updateStats() {
+  var pct = catItems.length > 0 ? Math.round(known.length / catItems.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stats').innerHTML = '✓ Connus\u00A0: <strong>' + known.length + '</strong> · ↻ À revoir\u00A0: <strong>' + reviewQueue.length + '</strong> · Restants\u00A0: <strong>' + available.length + '</strong>';
+}
+function doRestart() {
+  available = catItems.slice(); reviewQueue = []; known = []; turn = 0;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  showItem();
+}
+function setMode(m) { viewMode = m; document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === m); }); }
+function setFilter(f) { quizFilter = f; document.querySelectorAll('.filter-toggle .mode-btn').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter') === f); }); }
+
+function tapHandler(id, fn) {
+  var el = document.getElementById(id); if (!el) return;
+  var touched = false;
+  el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); touched = true; fn(); }, { passive: false });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); }, { passive: false });
+  el.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); if (!touched) fn(); touched = false; });
+}
+tapHandler('revealBtn', doReveal);
+tapHandler('knownBtn', doKnown);
+tapHandler('plus3Btn', function(){ doReview(3); });
+tapHandler('plus5Btn', function(){ doReview(5); });
+tapHandler('restartBtn', doRestart);
+tapHandler('backBtn', goBack);
+tapHandler('backBtn2', goBack);
+tapHandler('backBtnT', goBack);
+tapHandler('modeCards', function(){ setMode('cards'); });
+tapHandler('modeTable', function(){ setMode('table'); });
+tapHandler('filterTout',        function(){ setFilter('tout'); });
+tapHandler('filterClasse',      function(){ setFilter('classe'); });
+tapHandler('filterSpecialites', function(){ setFilter('specialites'); });
+tapHandler('filterIndications', function(){ setFilter('indications'); });
+tapHandler('filterEI',          function(){ setFilter('ei'); });
+
+// ══════════════════════════════════════════════
+// RÉCALCITRANTS
+// ══════════════════════════════════════════════
+
+function updateMarkBtn() {
+  var btn = document.getElementById('markBtn');
+  var onCard = document.getElementById('screenCard').classList.contains('active');
+  if (!current || !onCard) {
+    btn.disabled = true; btn.classList.remove('marked'); btn.textContent = '⚑'; return;
+  }
+  btn.disabled = false;
+  var marked = rebels.indexOf(current.dci) !== -1;
+  btn.classList.toggle('marked', marked);
+  btn.textContent = marked ? '✓' : '⚑';
+  btn.title = marked ? 'Retirer des récalcitrants' : 'Marquer comme récalcitrant';
+}
+
+function updateRebelBadge() {
+  var b = document.getElementById('rebelBadge');
+  b.textContent = rebels.length;
+  b.classList.toggle('empty', rebels.length === 0);
+}
+
+function doRebel() {
+  if (!current) return;
+  var idx = rebels.indexOf(current.dci);
+  if (idx === -1) rebels.push(current.dci); else rebels.splice(idx, 1);
+  saveRebels(); updateRebelBadge(); updateMarkBtn();
+}
+
+function buildRebelText() {
+  if (rebels.length === 0) return '';
+  var lines = [];
+  for (var i = 0; i < rebels.length; i++) {
+    var dci = rebels[i], cls = '', grp = '';
+    outerLoop: for (var g = 0; g < CATS.length; g++) {
+      for (var j = 0; j < CATS[g].items.length; j++) {
+        if (CATS[g].items[j][0] === dci) { cls = CATS[g].items[j][1]; grp = CATS[g].name; break outerLoop; }
+      }
+    }
+    lines.push(dci + (cls ? '\t' + cls : '') + (grp ? '\t(' + grp + ')' : ''));
+  }
+  return lines.join('\n');
+}
+
+function openRebelModal() {
+  document.getElementById('rebelList').value = buildRebelText();
+  var cb = document.getElementById('clearBtn');
+  if (cb.dataset.confirming) {
+    clearTimeout(cb.dataset.timeoutId);
+    cb.textContent = cb.dataset.origText || '🗑 Vider';
+    cb.style.background = ''; cb.style.color = '';
+    delete cb.dataset.confirming; delete cb.dataset.timeoutId; delete cb.dataset.origText;
+  }
+  document.getElementById('rebelModal').classList.add('show');
+}
+
+function closeRebelModal() { document.getElementById('rebelModal').classList.remove('show'); }
+
+function copyRebels() {
+  var ta = document.getElementById('rebelList');
+  if (!ta.value) return;
+  ta.removeAttribute('readonly'); ta.focus(); ta.select(); ta.setSelectionRange(0, 99999);
+  var ok = false; try { ok = document.execCommand('copy'); } catch(e) {}
+  ta.setAttribute('readonly', '');
+  if (navigator.clipboard && !ok) navigator.clipboard.writeText(ta.value).catch(function(){});
+  var btn = document.getElementById('copyBtn'), orig = btn.textContent;
+  btn.textContent = '✓ Copié !'; setTimeout(function(){ btn.textContent = orig; }, 1200);
+}
+
+function clearRebels() {
+  if (rebels.length === 0) return;
+  var btn = document.getElementById('clearBtn');
+  if (!btn.dataset.confirming) {
+    btn.dataset.confirming = '1'; var orig = btn.textContent; btn.dataset.origText = orig;
+    btn.textContent = '⚠ Confirmer ?';
+    btn.style.background = 'linear-gradient(135deg,#a03030,#e04040)'; btn.style.color = 'white';
+    btn.dataset.timeoutId = setTimeout(function() {
+      btn.textContent = btn.dataset.origText || '🗑 Vider';
+      btn.style.background = ''; btn.style.color = '';
+      delete btn.dataset.confirming; delete btn.dataset.timeoutId; delete btn.dataset.origText;
+    }, 3000);
+    return;
+  }
+  clearTimeout(btn.dataset.timeoutId); delete btn.dataset.confirming; delete btn.dataset.timeoutId;
+  btn.textContent = btn.dataset.origText || '🗑 Vider'; btn.style.background = ''; btn.style.color = '';
+  delete btn.dataset.origText;
+  rebels = []; saveRebels(); updateRebelBadge(); updateMarkBtn();
+  document.getElementById('rebelList').value = '';
+}
+
+tapHandler('markBtn', doRebel);
+tapHandler('listBtn', openRebelModal);
+tapHandler('modalCloseBtn', closeRebelModal);
+tapHandler('copyBtn', copyRebels);
+tapHandler('clearBtn', clearRebels);
+
+document.getElementById('rebelModal').addEventListener('click', function(e) {
+  if (e.target === this) closeRebelModal();
+});
+
+updateMarkBtn();
+updateRebelBadge();
+document.addEventListener('touchmove', function(e) {
+  // Autoriser le scroll dans la modal récalcitrants
+  if (e.target.closest && e.target.closest('#rebelModal')) return;
+  // Cherche un ancêtre scrollable (horizontal ou vertical) qui a effectivement
+  // du contenu débordant. Si on en trouve un, on laisse iOS gérer le geste.
+  var el = e.target;
+  while (el && el !== document.body && el.nodeType === 1) {
+    if (el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) {
+      return;
+    }
+    el = el.parentElement;
+  }
+  e.preventDefault();
+}, { passive: false });
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('screenCard').classList.contains('active')) {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!revealed) doReveal(); }
+    else if (e.code === 'ArrowRight' || e.code === 'KeyK') { if (revealed) doKnown(); }
+    else if (e.code === 'ArrowLeft' || e.code === 'KeyR' || e.code === 'Digit3') { if (revealed) doReview(3); }
+    else if (e.code === 'ArrowDown' || e.code === 'Digit5') { if (revealed) doReview(5); }
+    else if (e.code === 'Escape') goBack();
+  }
+  if (document.getElementById('screenTable').classList.contains('active')) { if (e.code === 'Escape') goBack(); }
+});
+buildGroupGrid();
+</script>
+</body>
+</html>
